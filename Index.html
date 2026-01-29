@@ -1,1 +1,79 @@
-index
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+    <div class="bg-indigo-900 p-6 text-center text-white">
+      <h1 class="text-2xl font-black tracking-tighter">DINC</h1>
+      <p class="text-indigo-200 text-xs uppercase tracking-widest">Integração de Novos Convertidos</p>
+    </div>
+
+    <form id="dincForm" class="p-6 space-y-4" onsubmit="processarForm(event)">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome do Convertido</label>
+        <input type="text" name="nome" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (com DDD)</label>
+        <input type="tel" name="telefone" id="tel" placeholder="11999999999" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Decisão</label>
+          <select name="tipo" class="w-full p-3 bg-gray-50 border rounded-lg outline-none">
+            <option value="Aceitação">Aceitação</option>
+            <option value="Reconciliação">Reconciliação</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Já é Batizado?</label>
+          <select name="batizado" class="w-full p-3 bg-gray-50 border rounded-lg outline-none">
+            <option value="Não">Não</option>
+            <option value="Sim">Sim</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2">
+        <i class="fa-solid fa-heart"></i> RECEBER ALMA
+      </button>
+    </form>
+  </div>
+
+  <script>
+    function processarForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> REGISTRANDO...';
+
+      const formData = {
+        nome: e.target.nome.value,
+        telefone: e.target.telefone.value.replace(/\D/g, ''),
+        tipo: e.target.tipo.value,
+        batizado: e.target.batizado.value
+      };
+
+      google.script.run.withSuccessHandler((res) => {
+        abrirWhatsapp(formData);
+        e.target.reset();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-heart"></i> RECEBER ALMA';
+      }).salvarConvertido(formData);
+    }
+
+    function abrirWhatsapp(dados) {
+      const msg = `Olá ${dados.nome}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0AEstou te enviando os materiais de boas-vindas que mencionamos no DINC.%0A%0AAcesse os links abaixo para baixar suas mídias:%0A%0A1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`;
+      
+      const url = `https://api.whatsapp.com/send?phone=55${dados.telefone}&text=${msg}`;
+      window.open(url, '_blank');
+    }
+  </script>
+</body>
+</html>
