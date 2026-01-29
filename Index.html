@@ -1,57 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DINC - Nova Alma</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Otimização para teclados mobile não quebrarem o layout */
+    body { min-height: -webkit-fill-available; }
+    .glass-effect { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    input:focus, select:focus { transform: scale(1.02); transition: all 0.2s ease; }
+  </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-indigo-950 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] min-h-screen flex items-center justify-center p-4">
 
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-    <div class="bg-indigo-900 p-6 text-center text-white">
-      <h1 class="text-2xl font-black tracking-tighter">DINC</h1>
-      <p class="text-indigo-200 text-xs uppercase tracking-widest">Integração de Novos Convertidos</p>
+  <div class="w-full max-w-md glass-effect rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+    
+    <div class="bg-indigo-900 p-8 text-center text-white relative">
+      <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+      <h1 class="text-3xl font-black tracking-tighter mb-1">DINC</h1>
+      <p class="text-indigo-300 text-[10px] uppercase tracking-[0.3em] font-bold">Departamento de Integração</p>
     </div>
 
-    <form id="dincForm" class="p-6 space-y-4" onsubmit="processarForm(event)">
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nome do Convertido</label>
-        <input type="text" name="nome" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+    <form id="dincForm" class="p-6 md:p-8 space-y-5" onsubmit="processarForm(event)">
+      
+      <div class="space-y-1">
+        <label class="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase ml-1">
+          <i class="fa-solid fa-user text-[10px]"></i> Nome do Convertido
+        </label>
+        <input type="text" name="nome" required placeholder="Ex: João Silva" 
+          class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg font-medium">
       </div>
 
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (com DDD)</label>
-        <input type="tel" name="telefone" id="tel" placeholder="11999999999" required class="w-full p-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+      <div class="space-y-1">
+        <label class="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase ml-1">
+          <i class="fa-brands fa-whatsapp text-[10px]"></i> WhatsApp (com DDD)
+        </label>
+        <input type="tel" name="telefone" id="tel" required placeholder="00 00000-0000" 
+          oninput="maskPhone(this)"
+          class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg font-medium">
       </div>
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Decisão</label>
-          <select name="tipo" class="w-full p-3 bg-gray-50 border rounded-lg outline-none">
+        <div class="space-y-1">
+          <label class="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase ml-1">
+            Decisão
+          </label>
+          <select name="tipo" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none appearance-none font-bold text-indigo-900">
             <option value="Aceitação">Aceitação</option>
             <option value="Reconciliação">Reconciliação</option>
           </select>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Já é Batizado?</label>
-          <select name="batizado" class="w-full p-3 bg-gray-50 border rounded-lg outline-none">
+        <div class="space-y-1">
+          <label class="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase ml-1">
+            Batizado?
+          </label>
+          <select name="batizado" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none appearance-none font-bold text-indigo-900">
             <option value="Não">Não</option>
             <option value="Sim">Sim</option>
           </select>
         </div>
       </div>
 
-      <button type="submit" id="btnSubmit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2">
-        <i class="fa-solid fa-heart"></i> RECEBER ALMA
-      </button>
+      <div class="pt-4">
+        <button type="submit" id="btnSubmit" class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-emerald-900/20 flex justify-center items-center gap-3 text-lg uppercase tracking-wider">
+          <i class="fa-solid fa-heart-circle-check text-2xl"></i> RECEBER ALMA
+        </button>
+      </div>
     </form>
+
+    <div class="p-4 bg-slate-50 text-center">
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Sincronizado com a base central</p>
+    </div>
   </div>
 
   <script>
+    // Máscara Simples para Celular
+    function maskPhone(i) {
+      let v = i.value.replace(/\D/g,'');
+      v = v.replace(/^(\d{2})(\d)/g,"($1) $2");
+      v = v.replace(/(\d)(\d{4})$/,"$1-$2");
+      i.value = v;
+    }
+
     function processarForm(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
+      const originalContent = btn.innerHTML;
+      
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> REGISTRANDO...';
+      btn.classList.replace('bg-emerald-600', 'bg-slate-400');
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-2xl"></i> SALVANDO...';
 
       const formData = {
         nome: e.target.nome.value,
@@ -60,17 +100,29 @@
         batizado: e.target.batizado.value
       };
 
-      google.script.run.withSuccessHandler((res) => {
-        abrirWhatsapp(formData);
-        e.target.reset();
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-heart"></i> RECEBER ALMA';
-      }).salvarConvertido(formData);
+      // Execução no Google Apps Script
+      google.script.run
+        .withSuccessHandler((res) => {
+          abrirWhatsapp(formData);
+          e.target.reset();
+          resetButton(btn, originalContent);
+        })
+        .withFailureHandler((err) => {
+          alert("Erro ao salvar: " + err);
+          resetButton(btn, originalContent);
+        })
+        .salvarConvertido(formData);
+    }
+
+    function resetButton(btn, content) {
+      btn.disabled = false;
+      btn.classList.replace('bg-slate-400', 'bg-emerald-600');
+      btn.innerHTML = content;
     }
 
     function abrirWhatsapp(dados) {
       const msg = `Olá ${dados.nome}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0AEstou te enviando os materiais de boas-vindas que mencionamos no DINC.%0A%0AAcesse os links abaixo para baixar suas mídias:%0A%0A1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`;
-      
+
       const url = `https://api.whatsapp.com/send?phone=55${dados.telefone}&text=${msg}`;
       window.open(url, '_blank');
     }
