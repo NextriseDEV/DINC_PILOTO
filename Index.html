@@ -120,12 +120,26 @@
       btn.innerHTML = content;
     }
 
-    function abrirWhatsapp(dados) {
-      const msg = `Olá ${dados.nome}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0AEstou te enviando os materiais de boas-vindas que mencionamos no DINC.%0A%0AAcesse os links abaixo para baixar suas mídias:%0A%0A1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`;
+function abrirWhatsapp(dados) {
+  // Garante que o número tenha apenas dígitos e o prefixo 55
+  const telefoneLimpo = "55" + dados.telefone.replace(/\D/g, '');
+  
+  // Texto da mensagem formatado
+  const msg = `Olá ${dados.nome}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0A` +
+              `Estou te enviando os materiais de boas-vindas que mencionamos no DINC.%0A%0A` +
+              `Acesse os links abaixo para baixar suas mídias:%0A%0A` +
+              `1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A` +
+              `2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A` +
+              `3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`;
 
-      const url = `https://api.whatsapp.com/send?phone=55${dados.telefone}&text=${msg}`;
-      window.open(url, '_blank');
-    }
+  const url = `https://api.whatsapp.com/send?phone=${telefoneLimpo}&text=${msg}`;
+  
+  // Tenta abrir em nova aba, se falhar (bloqueio de pop-up), abre na mesma
+  const win = window.open(url, '_blank');
+  if (!win || win.closed || typeof win.closed == 'undefined') {
+      window.location.href = url;
+  }
+}
   </script>
 </body>
 </html>
