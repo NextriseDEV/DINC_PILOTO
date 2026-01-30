@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .loading-overlay { display: none; background: rgba(0,0,0,0.5); position: fixed; inset: 0; z-index: 999; justify-content: center; items-center; }
+    .loading-overlay.active { display: flex; }
+    .sidebar { transition: transform 0.3s ease; }
+    .mobile-hidden { transform: translateX(-100%); }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans">
+
+  <div id="loader" class="loading-overlay"><i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i></div>
+
+  <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-indigo-950">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-black text-indigo-900">DINC ADMIN</h1>
+        <p class="text-gray-400 text-xs uppercase tracking-widest">Acesso Restrito</p>
+      </div>
+      <form onsubmit="realizarLogin(event)" class="space-y-4">
+        <input type="email" id="email" placeholder="E-mail" required class="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+        <input type="password" id="senha" placeholder="Senha" required class="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
+        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-all">ENTRAR</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminDashboard" class="hidden flex flex-col min-h-screen">
+    
+    <nav class="bg-indigo-900 text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-lg">
+      <button onclick="toggleMenu()" class="text-xl px-2"><i class="fa-solid fa-bars"></i></button>
+      <span class="font-black tracking-tighter text-xl">DINC</span>
+      <div class="flex items-center gap-3">
+        <span id="userName" class="hidden md:block text-xs opacity-70"></span>
+        <button onclick="logout()" class="text-red-400 p-2"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </nav>
+
+    <div id="sidebar" class="sidebar mobile-hidden fixed left-0 top-0 h-full w-64 bg-indigo-950 text-white z-50 p-6 shadow-2xl">
+      <button onclick="toggleMenu()" class="absolute top-4 right-4 text-xl">&times;</button>
+      <div class="mt-10 space-y-6">
+        <a href="#" onclick="carregarView('lista')" class="block py-2 border-b border-white/10 font-bold"><i class="fa-solid fa-users mr-2"></i> Convertidos</a>
+        <a href="#" id="menuAdmin" onclick="carregarView('usuarios')" class="hidden py-2 border-b border-white/10 font-bold"><i class="fa-solid fa-user-shield mr-2"></i> Gerenciar Equipe</a>
+      </div>
+    </div>
+
+    <main class="p-4 md:p-8 flex-1">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="viewTitle" class="text-xl font-black text-indigo-900 uppercase">Gestão de Almas</h2>
+        <button onclick="atualizarDados(true)" class="bg-white p-2 rounded-lg shadow text-indigo-600"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+
+      <div id="listaCards" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        </div>
+    </main>
+  </div>
+
+  <script>
+    let SESSION = null;
+    let DADOS_CACHE = [];
+
+    // --- CONTROLE DE ACESSO ---
+    function realizarLogin(e) {
+      e.preventDefault();
+      showLoader(true);
+      const data = { email: id('email').value, senha: id('senha').value };
+
+      google.script.run.withSuccessHandler(res => {
+        showLoader(false);
+        if(res.result === "success") {
+          SESSION = res.user;
+          localStorage.setItem('dinc_session', JSON.stringify(SESSION));
+          iniciarPainel();
+        } else {
+          alert(res.message);
+        }
+      }).handleLogin(data);
+    }
+
+    function iniciarPainel() {
+      id('loginSection').classList.add('hidden');
+      id('adminDashboard').classList.remove('hidden');
+      id('userName').innerText = SESSION.nome;
+      if(SESSION.nivel === "Coordenador") id('menuAdmin').classList.remove('hidden');
+      atualizarDados();
+    }
+
+    // --- PERFORMANCE: CACHE LOGIC ---
+    function atualizarDados(force = false) {
+      const cached = localStorage.getItem('dinc_data');
+      if(cached && !force) {
+        DADOS_CACHE = JSON.parse(cached);
+        renderizarLista();
+        return;
+      }
+
+      showLoader(true);
+      google.script.run.withSuccessHandler(res => {
+        DADOS_CACHE = res;
+        localStorage.setItem('dinc_data', JSON.stringify(res));
+        renderizarLista();
+        showLoader(false);
+      }).getDadosAdmin();
+    }
+
+    function renderizarLista() {
+      const container = id('listaCards');
+      container.innerHTML = DADOS_CACHE.map(item => `
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-2 h-full ${getStatusColor(item.status)}"></div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="font-black text-indigo-900 leading-tight">${item.nome}</h3>
+              <p class="text-[10px] text-slate-400 font-bold uppercase">${item.tipo} | ${item.data}</p>
+            </div>
+            <button onclick="abrirWppAdmin('${item.nome}', '${item.telefone}', '${item.status}', '${item.data_batismo}')" 
+              class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl hover:bg-emerald-200 transition-all">
+              <i class="fa-brands fa-whatsapp text-xl"></i>
+            </button>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-black text-slate-400 uppercase">Status</span>
+              <span class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700">${item.status}</span>
+            </div>
+            ${item.status.includes('Batismo') ? `
+              <div class="bg-blue-50 p-2 rounded-xl border border-blue-100">
+                <p class="text-[10px] font-bold text-blue-800 uppercase">Previsão Batismo</p>
+                <p class="text-sm font-black text-blue-900">${item.data_batismo || 'A definir'}</p>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function abrirWppAdmin(nome, tel, status, dataB) {
+      let msg = `Olá ${nome}, aqui é o ${SESSION.nome} do DINC!`;
+      
+      if(status.includes("Batismo")) {
+        msg += ` Passando para informar sobre seu batismo agendado para o dia ${dataB || 'em breve'}. Prepare seu coração!`;
+      }
+
+      window.open(`https://api.whatsapp.com/send?phone=55${tel.replace(/\D/g,'')}&text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // --- UTILITÁRIOS ---
+    function id(el) { return document.getElementById(el); }
+    function showLoader(s) { id('loader').classList.toggle('active', s); }
+    function toggleMenu() { id('sidebar').classList.toggle('mobile-hidden'); }
+    function getStatusColor(s) {
+      if(s.includes('Pendente')) return 'bg-yellow-400';
+      if(s.includes('Batismo')) return 'bg-blue-500';
+      if(s.includes('Concluído')) return 'bg-emerald-500';
+      return 'bg-indigo-300';
+    }
+
+    function logout() {
+      localStorage.clear();
+      location.reload();
+    }
+
+    // Auto-login se houver sessão
+    window.onload = () => {
+      const saved = localStorage.getItem('dinc_session');
+      if(saved) {
+        SESSION = JSON.parse(saved);
+        iniciarPainel();
+      }
+    };
+  </script>
+</body>
+</html>
