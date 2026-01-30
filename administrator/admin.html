@@ -1,58 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DINC ADMIN - Gestão</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    .loading-overlay { display: none; background: rgba(0,0,0,0.5); position: fixed; inset: 0; z-index: 999; justify-content: center; items-center; }
+    .loading-overlay { display: none; background: rgba(0,0,0,0.6); position: fixed; inset: 0; z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
     .loading-overlay.active { display: flex; }
     .sidebar { transition: transform 0.3s ease; }
     .mobile-hidden { transform: translateX(-100%); }
+    @media (min-width: 768px) { .mobile-hidden { transform: translateX(0); } }
   </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans">
 
-  <div id="loader" class="loading-overlay"><i class="fa-solid fa-circle-notch fa-spin text-white text-4xl"></i></div>
+  <div id="loader" class="loading-overlay flex flex-col gap-4">
+    <i class="fa-solid fa-circle-notch fa-spin text-white text-5xl"></i>
+    <span class="text-white font-bold tracking-widest uppercase text-xs">Acessando API...</span>
+  </div>
 
   <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-indigo-950">
     <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-indigo-900">DINC ADMIN</h1>
-        <p class="text-gray-400 text-xs uppercase tracking-widest">Acesso Restrito</p>
+        <h1 class="text-3xl font-black text-indigo-900 tracking-tighter italic">DINC ADMIN</h1>
+        <p class="text-gray-400 text-xs uppercase tracking-widest font-bold">Acesso Restrito</p>
       </div>
       <form onsubmit="realizarLogin(event)" class="space-y-4">
-        <input type="email" id="email" placeholder="E-mail" required class="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
-        <input type="password" id="senha" placeholder="Senha" required class="w-full p-4 bg-gray-50 border rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500">
-        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-all">ENTRAR</button>
+        <input type="email" id="email" placeholder="E-mail" required class="w-full p-4 bg-gray-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all font-medium">
+        <input type="password" id="senha" placeholder="Senha" required class="w-full p-4 bg-gray-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all font-medium">
+        <button type="submit" id="btnLogin" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg uppercase tracking-wider">ENTRAR NO SISTEMA</button>
       </form>
     </div>
   </div>
 
   <div id="adminDashboard" class="hidden flex flex-col min-h-screen">
-    
-    <nav class="bg-indigo-900 text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-lg">
-      <button onclick="toggleMenu()" class="text-xl px-2"><i class="fa-solid fa-bars"></i></button>
-      <span class="font-black tracking-tighter text-xl">DINC</span>
+    <nav class="bg-indigo-900 text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-lg border-b border-indigo-800">
+      <button onclick="toggleMenu()" class="text-xl px-2 active:scale-90 transition-transform"><i class="fa-solid fa-bars"></i></button>
+      <span class="font-black italic tracking-tighter text-2xl">DINC</span>
       <div class="flex items-center gap-3">
-        <span id="userName" class="hidden md:block text-xs opacity-70"></span>
-        <button onclick="logout()" class="text-red-400 p-2"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <span id="userName" class="hidden md:block text-[10px] font-bold uppercase opacity-70 tracking-widest"></span>
+        <button onclick="logout()" class="text-red-400 p-2 hover:bg-red-400/10 rounded-xl transition-colors"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     </nav>
 
-    <div id="sidebar" class="sidebar mobile-hidden fixed left-0 top-0 h-full w-64 bg-indigo-950 text-white z-50 p-6 shadow-2xl">
-      <button onclick="toggleMenu()" class="absolute top-4 right-4 text-xl">&times;</button>
-      <div class="mt-10 space-y-6">
-        <a href="#" onclick="carregarView('lista')" class="block py-2 border-b border-white/10 font-bold"><i class="fa-solid fa-users mr-2"></i> Convertidos</a>
-        <a href="#" id="menuAdmin" onclick="carregarView('usuarios')" class="hidden py-2 border-b border-white/10 font-bold"><i class="fa-solid fa-user-shield mr-2"></i> Gerenciar Equipe</a>
+    <div id="sidebar" class="sidebar mobile-hidden fixed left-0 top-0 h-full w-64 bg-indigo-950 text-white z-50 p-6 shadow-2xl md:static">
+      <button onclick="toggleMenu()" class="md:hidden absolute top-4 right-4 text-xl">&times;</button>
+      <div class="mt-10 space-y-4 font-bold uppercase tracking-wider text-xs">
+        <a href="#" onclick="switchView('lista')" class="flex items-center gap-3 p-4 rounded-2xl bg-indigo-900 text-indigo-200 border-l-4 border-emerald-500"><i class="fa-solid fa-users"></i> Convertidos</a>
+        <a href="#" id="menuAdmin" onclick="switchView('usuarios')" class="hidden flex items-center gap-3 p-4 rounded-2xl hover:bg-indigo-900 transition-colors"><i class="fa-solid fa-user-shield"></i> Equipe</a>
       </div>
     </div>
 
-    <main class="p-4 md:p-8 flex-1">
+    <main class="p-4 md:p-8 flex-1 overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
-        <h2 id="viewTitle" class="text-xl font-black text-indigo-900 uppercase">Gestão de Almas</h2>
-        <button onclick="atualizarDados(true)" class="bg-white p-2 rounded-lg shadow text-indigo-600"><i class="fa-solid fa-rotate"></i></button>
+        <h2 id="viewTitle" class="text-xl font-black text-indigo-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
+        <button onclick="atualizarDados(true)" class="bg-white p-3 rounded-2xl shadow-md text-indigo-600 active:rotate-180 transition-transform"><i class="fa-solid fa-rotate"></i></button>
       </div>
 
       <div id="listaCards" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -61,37 +65,47 @@
   </div>
 
   <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwEviRWd7qV7supWfdTYedOBndXBIzLRV_QxZpW0TiQgVrdFD1G2buqe0zTiUwrbfhguQ/exec";
     let SESSION = null;
     let DADOS_CACHE = [];
 
-    // --- CONTROLE DE ACESSO ---
-    function realizarLogin(e) {
+    async function realizarLogin(e) {
       e.preventDefault();
       showLoader(true);
-      const data = { email: id('email').value, senha: id('senha').value };
+      
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
 
-      google.script.run.withSuccessHandler(res => {
-        showLoader(false);
-        if(res.result === "success") {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'login', email, senha })
+        });
+        const res = await response.json();
+
+        if(res.status === "success") {
           SESSION = res.user;
           localStorage.setItem('dinc_session', JSON.stringify(SESSION));
           iniciarPainel();
         } else {
           alert(res.message);
         }
-      }).handleLogin(data);
+      } catch (err) {
+        alert("Erro ao conectar com a API.");
+      } finally {
+        showLoader(false);
+      }
     }
 
     function iniciarPainel() {
-      id('loginSection').classList.add('hidden');
-      id('adminDashboard').classList.remove('hidden');
-      id('userName').innerText = SESSION.nome;
-      if(SESSION.nivel === "Coordenador") id('menuAdmin').classList.remove('hidden');
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('userName').innerText = SESSION.nome;
+      if(SESSION.nivel === "Coordenador") document.getElementById('menuAdmin').classList.remove('hidden');
       atualizarDados();
     }
 
-    // --- PERFORMANCE: CACHE LOGIC ---
-    function atualizarDados(force = false) {
+    async function atualizarDados(force = false) {
       const cached = localStorage.getItem('dinc_data');
       if(cached && !force) {
         DADOS_CACHE = JSON.parse(cached);
@@ -100,39 +114,52 @@
       }
 
       showLoader(true);
-      google.script.run.withSuccessHandler(res => {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'getDados' })
+        });
+        const res = await response.json();
         DADOS_CACHE = res;
         localStorage.setItem('dinc_data', JSON.stringify(res));
         renderizarLista();
+      } catch (err) {
+        alert("Erro ao buscar dados.");
+      } finally {
         showLoader(false);
-      }).getDadosAdmin();
+      }
     }
 
     function renderizarLista() {
-      const container = id('listaCards');
+      const container = document.getElementById('listaCards');
+      if(!DADOS_CACHE.length) {
+        container.innerHTML = `<p class="col-span-full text-center text-slate-400 font-bold uppercase py-10">Nenhum registro encontrado.</p>`;
+        return;
+      }
+
       container.innerHTML = DADOS_CACHE.map(item => `
-        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden">
+        <div class="bg-white p-5 rounded-3xl shadow-md border border-slate-100 relative overflow-hidden transition-all hover:shadow-xl">
           <div class="absolute top-0 left-0 w-2 h-full ${getStatusColor(item.status)}"></div>
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="font-black text-indigo-900 leading-tight">${item.nome}</h3>
-              <p class="text-[10px] text-slate-400 font-bold uppercase">${item.tipo} | ${item.data}</p>
+              <h3 class="font-black text-indigo-900 leading-tight uppercase tracking-tighter">${item.nome}</h3>
+              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${item.tipo} | ${item.data}</p>
             </div>
             <button onclick="abrirWppAdmin('${item.nome}', '${item.telefone}', '${item.status}', '${item.data_batismo}')" 
-              class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl hover:bg-emerald-200 transition-all">
+              class="bg-emerald-100 text-emerald-600 p-4 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all active:scale-90">
               <i class="fa-brands fa-whatsapp text-xl"></i>
             </button>
           </div>
           
           <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-black text-slate-400 uppercase">Status</span>
-              <span class="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700">${item.status}</span>
+            <div class="flex items-center justify-between border-t border-slate-50 pt-3">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Atual</span>
+              <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">${item.status}</span>
             </div>
-            ${item.status.includes('Batismo') ? `
-              <div class="bg-blue-50 p-2 rounded-xl border border-blue-100">
-                <p class="text-[10px] font-bold text-blue-800 uppercase">Previsão Batismo</p>
-                <p class="text-sm font-black text-blue-900">${item.data_batismo || 'A definir'}</p>
+            ${item.data_batismo ? `
+              <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+                <p class="text-[9px] font-black text-indigo-800 uppercase tracking-widest">Agenda de Batismo</p>
+                <p class="text-sm font-black text-indigo-900">${item.data_batismo}</p>
               </div>
             ` : ''}
           </div>
@@ -141,32 +168,25 @@
     }
 
     function abrirWppAdmin(nome, tel, status, dataB) {
-      let msg = `Olá ${nome}, aqui é o ${SESSION.nome} do DINC!`;
-      
+      const usuarioLogado = SESSION.nome;
+      let msg = `Olá ${nome.toUpperCase()}, aqui é o ${usuarioLogado.toUpperCase()} do DINC!`;
       if(status.includes("Batismo")) {
-        msg += ` Passando para informar sobre seu batismo agendado para o dia ${dataB || 'em breve'}. Prepare seu coração!`;
+        msg += ` Passando para informar sobre seu batismo agendado para o dia ${dataB || 'em breve'}. Prepare seu coração! 🌟`;
       }
-
       window.open(`https://api.whatsapp.com/send?phone=55${tel.replace(/\D/g,'')}&text=${encodeURIComponent(msg)}`, '_blank');
     }
 
-    // --- UTILITÁRIOS ---
-    function id(el) { return document.getElementById(el); }
-    function showLoader(s) { id('loader').classList.toggle('active', s); }
-    function toggleMenu() { id('sidebar').classList.toggle('mobile-hidden'); }
+    function showLoader(s) { document.getElementById('loader').classList.toggle('active', s); }
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('mobile-hidden'); }
     function getStatusColor(s) {
       if(s.includes('Pendente')) return 'bg-yellow-400';
-      if(s.includes('Batismo')) return 'bg-blue-500';
+      if(s.includes('Batismo')) return 'bg-indigo-500';
       if(s.includes('Concluído')) return 'bg-emerald-500';
-      return 'bg-indigo-300';
+      return 'bg-slate-300';
     }
 
-    function logout() {
-      localStorage.clear();
-      location.reload();
-    }
+    function logout() { localStorage.clear(); location.reload(); }
 
-    // Auto-login se houver sessão
     window.onload = () => {
       const saved = localStorage.getItem('dinc_session');
       if(saved) {
