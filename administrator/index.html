@@ -1,199 +1,106 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DINC ADMIN - Gestão</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .loading-overlay { display: none; background: rgba(0,0,0,0.6); position: fixed; inset: 0; z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-    .loading-overlay.active { display: flex; }
-    .sidebar { transition: transform 0.3s ease; }
-    .mobile-hidden { transform: translateX(-100%); }
-    @media (min-width: 768px) { .mobile-hidden { transform: translateX(0); } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DINC GESTÃO - Novo Caminho</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .loading-overlay { display: none; background: rgba(0,0,0,0.6); position: fixed; inset: 0; z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .loading-overlay.active { display: flex; }
+        .status-badge { padding: 4px 12px; border-radius: 9999px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
+        .status-pendente { background-color: #fef3c7; color: #92400e; }
+        .status-ativo { background-color: #d1fae5; color: #065f46; }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen font-sans">
 
-  <div id="loader" class="loading-overlay flex flex-col gap-4">
-    <i class="fa-solid fa-circle-notch fa-spin text-white text-5xl"></i>
-    <span class="text-white font-bold tracking-widest uppercase text-xs">Acessando API...</span>
-  </div>
-
-  <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-indigo-950">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl">
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-black text-indigo-900 tracking-tighter italic">DINC ADMIN</h1>
-        <p class="text-gray-400 text-xs uppercase tracking-widest font-bold">Acesso Restrito</p>
-      </div>
-      <form onsubmit="realizarLogin(event)" class="space-y-4">
-        <input type="email" id="email" placeholder="E-mail" required class="w-full p-4 bg-gray-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all font-medium">
-        <input type="password" id="senha" placeholder="Senha" required class="w-full p-4 bg-gray-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-indigo-500 transition-all font-medium">
-        <button type="submit" id="btnLogin" class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg uppercase tracking-wider">ENTRAR NO SISTEMA</button>
-      </form>
-    </div>
-  </div>
-
-  <div id="adminDashboard" class="hidden flex flex-col min-h-screen">
-    <nav class="bg-indigo-900 text-white p-4 flex justify-between items-center sticky top-0 z-40 shadow-lg border-b border-indigo-800">
-      <button onclick="toggleMenu()" class="text-xl px-2 active:scale-90 transition-transform"><i class="fa-solid fa-bars"></i></button>
-      <span class="font-black italic tracking-tighter text-2xl">DINC</span>
-      <div class="flex items-center gap-3">
-        <span id="userName" class="hidden md:block text-[10px] font-bold uppercase opacity-70 tracking-widest"></span>
-        <button onclick="logout()" class="text-red-400 p-2 hover:bg-red-400/10 rounded-xl transition-colors"><i class="fa-solid fa-right-from-bracket"></i></button>
-      </div>
-    </nav>
-
-    <div id="sidebar" class="sidebar mobile-hidden fixed left-0 top-0 h-full w-64 bg-indigo-950 text-white z-50 p-6 shadow-2xl md:static">
-      <button onclick="toggleMenu()" class="md:hidden absolute top-4 right-4 text-xl">&times;</button>
-      <div class="mt-10 space-y-4 font-bold uppercase tracking-wider text-xs">
-        <a href="#" onclick="switchView('lista')" class="flex items-center gap-3 p-4 rounded-2xl bg-indigo-900 text-indigo-200 border-l-4 border-emerald-500"><i class="fa-solid fa-users"></i> Convertidos</a>
-        <a href="#" id="menuAdmin" onclick="switchView('usuarios')" class="hidden flex items-center gap-3 p-4 rounded-2xl hover:bg-indigo-900 transition-colors"><i class="fa-solid fa-user-shield"></i> Equipe</a>
-      </div>
+    <div id="loader" class="loading-overlay flex flex-col gap-4 text-white">
+        <i class="fa-solid fa-circle-notch fa-spin text-5xl"></i>
+        <span class="font-bold text-xs uppercase tracking-widest">Sincronizando Gestão...</span>
     </div>
 
-    <main class="p-4 md:p-8 flex-1 overflow-y-auto">
-      <div class="flex justify-between items-center mb-6">
-        <h2 id="viewTitle" class="text-xl font-black text-indigo-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
-        <button onclick="atualizarDados(true)" class="bg-white p-3 rounded-2xl shadow-md text-indigo-600 active:rotate-180 transition-transform"><i class="fa-solid fa-rotate"></i></button>
-      </div>
+    <div id="app" class="flex h-screen overflow-hidden">
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-8">
+                <h2 class="text-xl font-black text-indigo-900 italic tracking-tighter">DINC GESTÃO</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="atualizarDados()" class="text-indigo-600 hover:rotate-180 transition-all p-2"><i class="fa-solid fa-rotate"></i></button>
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold" id="userIcon">A</div>
+                </div>
+            </header>
 
-      <div id="listaCards" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        </div>
-    </main>
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwEviRWd7qV7supWfdTYedOBndXBIzLRV_QxZpW0TiQgVrdFD1G2buqe0zTiUwrbfhguQ/exec";
-    let SESSION = null;
-    let DADOS_CACHE = [];
-
-    async function realizarLogin(e) {
-      e.preventDefault();
-      showLoader(true);
-      
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'login', email, senha })
-        });
-        const res = await response.json();
-
-        if(res.status === "success") {
-          SESSION = res.user;
-          localStorage.setItem('dinc_session', JSON.stringify(SESSION));
-          iniciarPainel();
-        } else {
-          alert(res.message);
-        }
-      } catch (err) {
-        alert("Erro ao conectar com a API.");
-      } finally {
-        showLoader(false);
-      }
-    }
-
-    function iniciarPainel() {
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('adminDashboard').classList.remove('hidden');
-      document.getElementById('userName').innerText = SESSION.nome;
-      if(SESSION.nivel === "Coordenador") document.getElementById('menuAdmin').classList.remove('hidden');
-      atualizarDados();
-    }
-
-    async function atualizarDados(force = false) {
-      const cached = localStorage.getItem('dinc_data');
-      if(cached && !force) {
-        DADOS_CACHE = JSON.parse(cached);
-        renderizarLista();
-        return;
-      }
-
-      showLoader(true);
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'getDados' })
-        });
-        const res = await response.json();
-        DADOS_CACHE = res;
-        localStorage.setItem('dinc_data', JSON.stringify(res));
-        renderizarLista();
-      } catch (err) {
-        alert("Erro ao buscar dados.");
-      } finally {
-        showLoader(false);
-      }
-    }
-
-    function renderizarLista() {
-      const container = document.getElementById('listaCards');
-      if(!DADOS_CACHE.length) {
-        container.innerHTML = `<p class="col-span-full text-center text-slate-400 font-bold uppercase py-10">Nenhum registro encontrado.</p>`;
-        return;
-      }
-
-      container.innerHTML = DADOS_CACHE.map(item => `
-        <div class="bg-white p-5 rounded-3xl shadow-md border border-slate-100 relative overflow-hidden transition-all hover:shadow-xl">
-          <div class="absolute top-0 left-0 w-2 h-full ${getStatusColor(item.status)}"></div>
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <h3 class="font-black text-indigo-900 leading-tight uppercase tracking-tighter">${item.nome}</h3>
-              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${item.tipo} | ${item.data}</p>
+            <div class="flex-1 overflow-y-auto p-8">
+                <div id="listaCards" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    </div>
             </div>
-            <button onclick="abrirWppAdmin('${item.nome}', '${item.telefone}', '${item.status}', '${item.data_batismo}')" 
-              class="bg-emerald-100 text-emerald-600 p-4 rounded-2xl hover:bg-emerald-500 hover:text-white transition-all active:scale-90">
-              <i class="fa-brands fa-whatsapp text-xl"></i>
-            </button>
-          </div>
-          
-          <div class="space-y-3">
-            <div class="flex items-center justify-between border-t border-slate-50 pt-3">
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status Atual</span>
-              <span class="text-[10px] font-black px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 uppercase tracking-wider">${item.status}</span>
-            </div>
-            ${item.data_batismo ? `
-              <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
-                <p class="text-[9px] font-black text-indigo-800 uppercase tracking-widest">Agenda de Batismo</p>
-                <p class="text-sm font-black text-indigo-900">${item.data_batismo}</p>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `).join('');
+        </main>
+    </div>
+
+<script>
+    // URL da API de Gestão (O novo Web App que você criou)
+// CERTIFIQUE-SE DE QUE ESTA URL TERMINA COM /exec
+const API_GESTAO = "https://script.google.com/macros/s/AKfycbwqjPBQMQ3x0yZNPjh1RqEeZH_Wc7F2-GpVpGVERGd6MyjssvyUiegRV8wWW9n48Szv/exec";
+let DADOS_CACHE = [];
+
+async function atualizarDados() {
+    showLoader(true);
+    try {
+        // Usamos a URL com parâmetro action para o doGet do Apps Script
+        const response = await fetch(`${API_GESTAO}?action=getDados`);
+        
+        if (!response.ok) throw new Error("Falha na rede");
+        
+        DADOS_CACHE = await response.json();
+        renderizar();
+    } catch (err) {
+        console.error("Erro na sincronização:", err);
+        alert("Erro ao conectar com o cérebro da operação. Verifique se o Script foi publicado como 'Qualquer Pessoa'.");
+        // Remove o loader mesmo em caso de erro para não travar a tela
+        showLoader(false);
+    } finally {
+        showLoader(false);
+    }
+}
+
+function renderizar() {
+    const container = document.getElementById('listaCards');
+    if (!DADOS_CACHE || DADOS_CACHE.length === 0) {
+        container.innerHTML = '<p class="col-span-full text-center py-10 text-gray-400 font-bold uppercase">Nenhum registro encontrado.</p>';
+        return;
     }
 
-    function abrirWppAdmin(nome, tel, status, dataB) {
-      const usuarioLogado = SESSION.nome;
-      let msg = `Olá ${nome.toUpperCase()}, aqui é o ${usuarioLogado.toUpperCase()} do DINC!`;
-      if(status.includes("Batismo")) {
-        msg += ` Passando para informar sobre seu batismo agendado para o dia ${dataB || 'em breve'}. Prepare seu coração! 🌟`;
-      }
-      window.open(`https://api.whatsapp.com/send?phone=55${tel.replace(/\D/g,'')}&text=${encodeURIComponent(msg)}`, '_blank');
-    }
+    container.innerHTML = DADOS_CACHE.map(item => `
+        <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100 relative overflow-hidden transition-all hover:shadow-xl">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="font-black text-indigo-900 leading-tight uppercase tracking-tighter">${item.nome || 'Sem Nome'}</h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">${item.tipo || 'N/A'} | ${item.data || ''}</p>
+                </div>
+                <button onclick="window.open('https://api.whatsapp.com/send?phone=55${String(item.telefone).replace(/\D/g,'')}')" class="bg-emerald-100 text-emerald-600 p-3 rounded-2xl">
+                    <i class="fa-brands fa-whatsapp text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3 pt-3 border-t border-slate-50">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</span>
+                    <span class="status-badge ${String(item.status).includes('Pendente') ? 'status-pendente' : 'status-ativo'}">${item.status || 'Pendente'}</span>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Observações do Cadastro</p>
+                    <p class="text-xs text-slate-600 italic font-medium leading-relaxed">${item.observacoes || 'Sem observações registradas.'}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
 
     function showLoader(s) { document.getElementById('loader').classList.toggle('active', s); }
-    function toggleMenu() { document.getElementById('sidebar').classList.toggle('mobile-hidden'); }
-    function getStatusColor(s) {
-      if(s.includes('Pendente')) return 'bg-yellow-400';
-      if(s.includes('Batismo')) return 'bg-indigo-500';
-      if(s.includes('Concluído')) return 'bg-emerald-500';
-      return 'bg-slate-300';
-    }
 
-    function logout() { localStorage.clear(); location.reload(); }
-
-    window.onload = () => {
-      const saved = localStorage.getItem('dinc_session');
-      if(saved) {
-        SESSION = JSON.parse(saved);
-        iniciarPainel();
-      }
-    };
-  </script>
+    // Inicia automático
+    window.onload = atualizarDados;
+</script>
 </body>
 </html>
