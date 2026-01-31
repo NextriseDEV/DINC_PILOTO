@@ -3,388 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gestor - DINC</title>
+    <title>DINC GESTÃO - Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        
-        /* Layout Responsivo */
-        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s ease-in-out; z-index: 40; }
-        .content { margin-left: 250px; padding: 2rem; transition: margin-left 0.3s ease-in-out; }
-        
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .content { margin-left: 0; padding: 1rem; }
-            .overlay-menu { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 30; }
-            .overlay-menu.active { display: block; }
-        }
-
-        /* Login Screen */
-        #login-screen { position: fixed; inset: 0; z-index: 100; background: #0d2d5a; display: flex; align-items: center; justify-content: center; }
-
-        /* Modal */
-        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 110; justify-content: center; items-center; padding: 10px; }
-        
-        .custom-scroll::-webkit-scrollbar { width: 8px; }
-        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-        .status-badge { padding: 4px 10px; border-radius: 9999px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        .badge-aceitacao { background: #dcfce7; color: #166534; }
-        .badge-reconciliacao { background: #fef9c3; color: #854d0e; }
+        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s; z-index: 40; }
+        .content { margin-left: 250px; padding: 2rem; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } .content { margin-left: 0; } }
+        .nav-item.active { background: #1e40af; border-left: 4px solid #fbbf24; }
+        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center relative">
-            <div class="w-16 h-16 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black italic">DINC</div>
-            <h2 class="text-xl font-bold text-blue-900 mb-1">Acesso Restrito</h2>
-            <p class="text-sm text-gray-500 mb-6">Departamento de Integração</p>
-            
+    <div id="login-screen" class="fixed inset-0 z-[110] bg-[#0d2d5a] flex items-center justify-center">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
+            <div class="w-20 h-20 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-black italic shadow-xl">DINC</div>
+            <h2 class="text-xl font-bold text-blue-900 mb-6 uppercase tracking-tighter">Acesso Secretaria</h2>
             <form onsubmit="realizarLogin(event)" class="space-y-4 text-left">
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">E-mail</label>
-                    <input type="email" id="emailLogin" class="w-full p-3 border rounded-lg focus:border-blue-900 outline-none" required>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">Senha</label>
-                    <input type="password" id="senhaLogin" class="w-full p-3 border rounded-lg focus:border-blue-900 outline-none" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-900 text-white font-bold py-3 rounded-lg hover:bg-blue-800 transition">
-                    ENTRAR NO SISTEMA
-                </button>
+                <input type="email" id="emailLogin" placeholder="E-mail" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-900" required>
+                <input type="password" id="senhaLogin" placeholder="Senha" class="w-full p-4 border rounded-2xl outline-none focus:ring-2 focus:ring-blue-900" required>
+                <button type="submit" id="btnLogin" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl hover:bg-blue-800 transition shadow-lg">ENTRAR</button>
             </form>
-            <div class="mt-4 text-center">
-                <span id="loginMsg" class="text-red-500 font-bold text-xs"></span>
-            </div>
+            <p id="loginMsg" class="mt-4 text-red-500 font-bold text-xs"></p>
         </div>
     </div>
 
-    <div id="overlayMenu" class="overlay-menu" onclick="toggleMenu()"></div>
-
     <div id="sidebar" class="sidebar flex flex-col">
-        <div class="p-6 text-center border-b border-blue-800 relative">
-            <button onclick="toggleMenu()" class="md:hidden absolute top-4 right-4 text-blue-300"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h2 class="text-xl font-bold tracking-wider text-yellow-500 italic">DINC GESTÃO</h2>
-            <p class="text-[10px] text-blue-300 uppercase tracking-widest">Painel Administrativo</p>
+        <div class="p-8 text-center border-b border-blue-800">
+            <h2 class="text-2xl font-black text-yellow-500 italic tracking-tighter">DINC</h2>
+            <p class="text-[9px] text-blue-300 uppercase font-bold tracking-widest">Painel Administrativo</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
-            <a href="#" onclick="switchView('dashboard')" class="block p-3 rounded bg-blue-900/50 border-l-4 border-yellow-500 text-white hover:bg-blue-800 transition"><i class="fa-solid fa-users w-6"></i> Convertidos <span id="count-pending" class="float-right bg-blue-600 text-xs px-2 py-1 rounded-full">--</span></a>
-            <a href="#" onclick="switchView('relatorios')" class="block p-3 rounded text-gray-300 hover:bg-blue-800 transition"><i class="fa-solid fa-chart-line w-6"></i> Relatórios</a>
-            <a href="#" onclick="window.print()" class="block p-3 rounded text-gray-300 hover:bg-blue-800 transition"><i class="fa-solid fa-print w-6"></i> Imprimir Lista</a>
+            <a href="#" onclick="switchView('dashboard')" class="nav-item active block p-3 rounded font-bold text-sm"><i class="fa-solid fa-users w-8"></i> Convertidos</a>
+            <a href="#" id="btnMenuUsers" onclick="switchView('users')" class="hidden block p-3 rounded text-gray-400 font-bold text-sm"><i class="fa-solid fa-user-shield w-8"></i> Equipe / Usuários</a>
+            <a href="#" onclick="window.print()" class="block p-3 rounded text-gray-400 font-bold text-sm"><i class="fa-solid fa-print w-8"></i> Imprimir Lista</a>
         </nav>
-        <div class="p-4 border-t border-blue-800">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-blue-900 font-bold" id="userInitial">A</div>
-                <div>
-                    <p class="text-sm font-bold truncate w-32" id="userNameDisplay">Usuário</p>
-                    <button onclick="logout()" class="text-xs text-red-300 hover:text-white">Sair do Sistema</button>
-                </div>
-            </div>
+        <div class="p-6 border-t border-blue-800 text-xs font-bold">
+            <p id="userNameDisplay" class="text-yellow-500 uppercase"></p>
+            <button onclick="logout()" class="text-red-400 hover:text-white mt-2">Sair do Sistema</button>
         </div>
     </div>
 
     <div class="content">
-        <div class="md:hidden flex justify-between items-center mb-6">
-            <button onclick="toggleMenu()" class="text-blue-900 p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
-            <span class="font-bold text-blue-900 italic">DINC GESTÃO</span>
-            <div class="w-8"></div>
-        </div>
-
         <div id="view-dashboard">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-500 text-xs uppercase font-bold tracking-tighter">Total Geral</p><h3 class="text-3xl font-black text-gray-800" id="stat-total">--</h3></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 text-xs uppercase font-bold tracking-tighter">Aceitação</p><h3 class="text-3xl font-black text-green-700" id="stat-aceitacao">--</h3></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500"><p class="text-gray-500 text-xs uppercase font-bold tracking-tighter">Reconciliação</p><h3 class="text-3xl font-black text-yellow-700" id="stat-reconciliacao">--</h3></div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-500 text-xs uppercase font-bold tracking-tighter">Pendente Batismo</p><h3 class="text-3xl font-black text-purple-700" id="stat-batismo">--</h3></div>
-            </div>
-
-            <div class="bg-white p-4 rounded-t-xl border-b flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
-                <h2 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-table"></i> Lista de Convertidos</h2>
-                <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                    <select id="filterTipo" onchange="filterTable()" class="border rounded-lg px-3 py-2 text-sm bg-white font-semibold">
-                        <option value="">Todas Decisões</option>
-                        <option value="Aceitação">Aceitação</option>
-                        <option value="Reconciliação">Reconciliação</option>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-black text-blue-900 italic tracking-tighter uppercase">Gestão de Almas</h2>
+                <div class="flex gap-2">
+                    <select id="fAno" class="p-2 border rounded-lg text-xs font-bold outline-none"><option value="2026">2026</option></select>
+                    <select id="fMes" onchange="filterTable()" class="p-2 border rounded-lg text-xs font-bold outline-none">
+                        <option value="">Mês</option><option value="/01/">Jan</option><option value="/02/">Fev</option>
                     </select>
-                    <div class="relative w-full md:w-64">
-                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar por nome..." class="border rounded-lg pl-10 pr-4 py-2 text-sm w-full outline-none focus:border-blue-500" onkeyup="filterTable()">
-                    </div>
-                    <button onclick="carregarDados(true)" class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg font-bold hover:bg-blue-200 flex items-center gap-2 transition">
-                        <i class="fa-solid fa-rotate-right"></i>
-                    </button>
+                    <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-lg text-xs font-bold outline-none">
+                        <option value="">Período</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option>
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-white rounded-b-xl shadow-sm overflow-x-auto">
-                <table class="w-full text-left border-collapse min-w-[800px]">
-                    <thead class="bg-gray-50 text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+            <div class="bg-white p-4 rounded-2xl shadow-sm mb-6 flex flex-wrap gap-4 items-center">
+                <select id="fBatizado" onchange="filterTable()" class="border rounded-xl p-2 text-xs font-black text-gray-500 uppercase">
+                    <option value="">Batizado?</option><option value="Sim">Sim</option><option value="Não">Não</option>
+                </select>
+                <select id="fStatus" onchange="filterTable()" class="border rounded-xl p-2 text-xs font-black text-gray-500 uppercase">
+                    <option value="">Status</option>
+                    <option value="Pendente 1° Contato">Pendente</option>
+                    <option value="Concluido">Concluído</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Buscar por nome ou líder..." class="flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterTable()">
+                <button onclick="carregarDados(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold"><i class="fa-solid fa-sync"></i></button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b">
                         <tr>
-                            <th class="p-4">Convertido</th>
-                            <th class="p-4">WhatsApp</th>
-                            <th class="p-4">Batizado</th>
-                            <th class="p-4">Discipulado</th>
-                            <th class="p-4 text-right">Ação</th>
+                            <th class="p-5">Informações do Convertido</th>
+                            <th class="p-5">Decisão / Período</th>
+                            <th class="p-5">Líder Resp.</th>
+                            <th class="p-5">Status</th>
+                            <th class="p-5 text-right">Ação</th>
                         </tr>
                     </thead>
-                    <tbody id="table-body" class="text-sm divide-y divide-gray-100">
-                        <tr><td colspan="5" class="p-8 text-center text-gray-400 font-bold uppercase tracking-tighter">Sincronizando com a Planilha Mestra...</td></tr>
+                    <tbody id="table-body" class="text-sm divide-y">
+                        <tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase">Aguardando dados...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div id="view-relatorios" class="hidden">
-            <div class="bg-white p-8 rounded-2xl shadow-sm">
-                <h2 class="text-2xl font-black text-blue-900 mb-6 uppercase italic tracking-tighter">Relatórios DINC</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="relatorio-content">
-                    <p class="text-gray-400 uppercase font-bold">Processando métricas...</p>
-                </div>
+        <div id="view-users" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-black text-blue-900 italic tracking-tighter uppercase">Gestão de Equipe</h2>
+                <button onclick="openUserModal()" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-xs shadow-lg">+ NOVO USUÁRIO</button>
             </div>
+            <div id="usersList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
     </div>
 
     <div id="modalAnalyze" class="modal-analise">
-        <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
-            <div class="bg-blue-900 text-white p-6 flex justify-between items-center">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <div class="bg-blue-900 p-8 text-white flex justify-between items-center">
                 <div>
-                    <h3 class="font-black uppercase italic tracking-tighter">Evolução Discipulado</h3>
-                    <p class="text-[10px] text-blue-200 uppercase font-bold tracking-widest" id="modalSubtitle">...</p>
+                    <h3 id="modalNome" class="font-black text-xl uppercase italic tracking-tighter leading-tight">--</h3>
+                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest">Atualizar Evolução</p>
                 </div>
-                <button onclick="closeModal()" class="text-gray-300 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <button onclick="closeModal()" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
-            <form id="formEdit" class="p-8 space-y-5" onsubmit="salvarEvolucao(event)">
+            <form id="formEdit" class="p-8 space-y-4" onsubmit="salvarEvolucao(event)">
                 <input type="hidden" id="editNome">
-                <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Previsão de Batismo</label>
-                    <input type="date" id="editDataBatismo" class="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold">
+                <input type="hidden" id="editTel">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Data Batismo</label>
+                        <input type="date" id="editDataBatismo" class="w-full p-3 border rounded-xl outline-none font-bold text-sm">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Horário</label>
+                        <input type="time" id="editHoraBatismo" value="09:00" class="w-full p-3 border rounded-xl outline-none font-bold text-sm">
+                    </div>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Status da Integração</label>
-                    <select id="editStatus" class="w-full p-3 border rounded-xl font-bold text-blue-900 bg-slate-50 outline-none">
+                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Líder Responsável</label>
+                    <input type="text" id="editLider" placeholder="Nome do Líder" class="w-full p-3 border rounded-xl outline-none font-bold text-sm uppercase">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Status</label>
+                    <select id="editStatus" class="w-full p-3 border rounded-xl font-bold text-blue-900 bg-slate-50 outline-none uppercase text-xs">
                         <option value="Pendente 1° Contato">Pendente 1° Contato</option>
                         <option value="Em Integração">Em Integração</option>
-                        <option value="Em Discipulado">Em Discipulado</option>
+                        <option value="Discipulado">Em Discipulado</option>
+                        <option value="Integração Presidencial">Integração Presidencial (Pastor Presidente)</option>
                         <option value="Concluido">Concluído (Disparar App)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Observações da Secretaria</label>
-                    <textarea id="editObs" rows="3" class="w-full p-3 border rounded-xl resize-none outline-none focus:ring-2 focus:ring-blue-500 font-medium"></textarea>
+                    <label class="text-[10px] font-black text-gray-400 uppercase block mb-1">Observações Especiais</label>
+                    <textarea id="editObs" rows="2" class="w-full p-3 border rounded-xl resize-none outline-none font-medium text-xs"></textarea>
                 </div>
-                <div class="pt-2">
-                    <button type="submit" id="btnSalvar" class="w-full bg-green-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-green-700 transition uppercase tracking-widest">
-                        ATUALIZAR EVOLUÇÃO
-                    </button>
+                <div class="flex flex-col gap-2 pt-2">
+                    <button type="submit" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-xs tracking-widest">SALVAR DADOS</button>
+                    <button type="button" id="btnWppBatismo" onclick="enviarWppBatismo()" class="hidden w-full bg-emerald-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] tracking-widest"><i class="fa-brands fa-whatsapp mr-2 text-sm"></i> Notificar Batismo</button>
+                    <button type="button" id="btnWppIntegração" onclick="enviarWppIntegração()" class="hidden w-full bg-purple-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] tracking-widest"><i class="fa-brands fa-whatsapp mr-2 text-sm"></i> Notificar Integração Presidencial</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="modalUser" class="modal-analise">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative">
+            <h3 class="font-black text-blue-900 uppercase italic mb-6">Novo Usuário DINC</h3>
+            <form onsubmit="salvarNovoUsuario(event)" class="space-y-4">
+                <input id="uNome" placeholder="Nome Completo" class="w-full p-3 border rounded-xl outline-none" required>
+                <input id="uEmail" placeholder="E-mail" class="w-full p-3 border rounded-xl outline-none" required>
+                <input id="uSenha" placeholder="Senha" type="password" class="w-full p-3 border rounded-xl outline-none" required>
+                <select id="uNivel" class="w-full p-3 border rounded-xl font-bold bg-slate-50 outline-none">
+                    <option value="Padrao">Usuário Padrão</option>
+                    <option value="Coordenador">Coordenador</option>
+                </select>
+                <button type="submit" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg">CRIAR ACESSO</button>
+            </form>
+            <button onclick="document.getElementById('modalUser').style.display='none'" class="mt-4 w-full text-xs font-bold text-gray-400">CANCELAR</button>
+        </div>
+    </div>
+
     <script>
-        // URL da API (Gestao_Admin.gs)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwqjPBQMQ3x0yZNPjh1RqEeZH_Wc7F2-GpVpGVERGd6MyjssvyUiegRV8wWW9n48Szv/exec'; 
-        
-        let dbCache = []; 
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwqjPBQMQ3x0yZNPjh1RqEeZH_Wc7F2-GpVpGVERGd6MyjssvyUiegRV8wWW9n48Szv/exec'; 
+        let dbCache = [];
         let currentUser = null;
 
-        // --- AUTH ---
         async function realizarLogin(e) {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const msg = document.getElementById('loginMsg');
-            msg.innerText = "";
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> VALIDANDO...';
-            btn.disabled = true;
-
+            const btn = document.getElementById('btnLogin');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             const email = document.getElementById('emailLogin').value;
             const senha = document.getElementById('senhaLogin').value;
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=login&email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
+                const response = await fetch(`${API_URL}?action=login&email=${encodeURIComponent(email)}&senha=${encodeURIComponent(senha)}`);
                 const res = await response.json();
-
                 if (res.status === 'success') {
-                    localStorage.setItem('novoCaminhoSession', JSON.stringify(res.user));
+                    localStorage.setItem('dinc_v2_session', JSON.stringify(res.user));
                     iniciarSessao(res.user);
                 } else {
-                    msg.innerText = res.message;
-                    btn.innerHTML = 'ENTRAR NO SISTEMA';
-                    btn.disabled = false;
+                    document.getElementById('loginMsg').innerText = res.message;
+                    btn.innerHTML = 'ENTRAR';
                 }
-            } catch (err) {
-                alert("Erro de conexão com o cerebro da operação.");
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Erro de conexão."); btn.innerHTML = 'ENTRAR'; }
         }
 
         function iniciarSessao(user) {
             currentUser = user;
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('userNameDisplay').innerText = user.nome;
-            document.getElementById('userInitial').innerText = user.nome.charAt(0).toUpperCase();
+            document.getElementById('userNameDisplay').innerText = `Logado: ${user.nome} (${user.nivel})`;
+            if(user.nivel === 'MASTER' || user.nivel === 'Coordenador') document.getElementById('btnMenuUsers').classList.remove('hidden');
             carregarDados();
         }
 
-        function logout() {
-            localStorage.removeItem('novoCaminhoSession');
-            location.reload();
-        }
-
-        // --- DADOS ---
-        async function carregarDados(forceUpdate = false) {
+        async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center uppercase font-black text-blue-900 italic"><i class="fa-solid fa-spinner fa-spin"></i> Sincronizando Métricas...</td></tr>';
-            
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-bold text-blue-900 uppercase">Sincronizando...</td></tr>';
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getDados`);
-                dbCache = await response.json();
-                atualizarDashboard(dbCache);
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold uppercase">Falha na API</td></tr>';
-            }
+                const res = await fetch(`${API_URL}?action=getDados`);
+                dbCache = await res.json();
+                filterTable();
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">ERRO NA API</td></tr>'; }
         }
 
-        function atualizarDashboard(dados) {
-            // Stats
-            document.getElementById('stat-total').innerText = dados.length;
-            document.getElementById('stat-aceitacao').innerText = dados.filter(i => i.tipo === 'Aceitação').length;
-            document.getElementById('stat-reconciliacao').innerText = dados.filter(i => i.tipo === 'Reconciliação').length;
-            document.getElementById('stat-batismo').innerText = dados.filter(i => i.batizado === 'Não').length;
-            document.getElementById('count-pending').innerText = dados.length;
-            
+        function filterTable() {
+            const ano = document.getElementById('fAno').value;
+            const mes = document.getElementById('fMes').value;
+            const periodo = document.getElementById('fPeriodo').value;
+            const batizado = document.getElementById('fBatizado').value;
+            const status = document.getElementById('fStatus').value;
+            const busca = document.getElementById('searchInput').value.toLowerCase();
+
+            let dados = dbCache.filter(i => {
+                const checkData = i.data.includes(ano) && (mes === "" || i.data.includes(mes));
+                const checkPeriodo = periodo === "" || i.periodo === periodo;
+                const checkBatizado = batizado === "" || i.batizado === batizado;
+                const checkStatus = status === "" || (i.status || "").includes(status);
+                const checkBusca = busca === "" || i.nome.toLowerCase().includes(busca) || (i.lider || "").toLowerCase().includes(busca);
+                return checkData && checkPeriodo && checkBatizado && checkStatus && checkBusca;
+            });
+
             renderTable(dados);
         }
 
         function renderTable(lista) {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            
-            if(lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400 font-bold uppercase">Nenhum registro encontrado</td></tr>';
-                return;
-            }
-
-            lista.forEach(item => {
-                const badge = item.tipo === 'Aceitação' ? 'badge-aceitacao' : 'badge-reconciliacao';
-                tbody.innerHTML += `
-                    <tr class="hover:bg-blue-50 transition border-b border-gray-100">
-                        <td class="p-4">
-                            <p class="font-black text-gray-800 uppercase tracking-tighter leading-tight">${item.nome}</p>
-                            <span class="status-badge ${badge}">${item.tipo}</span>
-                        </td>
-                        <td class="p-4">
-                            <a href="https://api.whatsapp.com/send?phone=55${String(item.telefone).replace(/\D/g,'')}" target="_blank" class="text-emerald-600 font-bold hover:underline italic">
-                                <i class="fa-brands fa-whatsapp"></i> ${item.telefone}
-                            </a>
-                        </td>
-                        <td class="p-4 font-bold text-gray-500 uppercase text-xs">${item.batizado}</td>
-                        <td class="p-4 text-xs font-black text-blue-900 uppercase italic">${item.status || 'Pendente'}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-800 text-[10px] font-black uppercase tracking-widest">
-                                GERIR
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
+            tbody.innerHTML = lista.map(item => `
+                <tr class="hover:bg-blue-50/50 transition">
+                    <td class="p-5">
+                        <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome}</p>
+                        <p class="text-[9px] font-bold text-slate-400">${item.data} | ${item.nascimento || '-'}</p>
+                    </td>
+                    <td class="p-5">
+                        <span class="status-badge ${item.tipo === 'Aceitação' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${item.tipo}</span>
+                        <p class="text-[9px] font-black text-slate-400 mt-1 uppercase italic">${item.periodo}</p>
+                    </td>
+                    <td class="p-5 font-bold text-slate-400 uppercase text-[10px] italic">${item.lider || '-'}</td>
+                    <td class="p-5 text-[10px] font-black text-blue-900 uppercase italic">${item.status || 'Pendente'}</td>
+                    <td class="p-5 text-right">
+                        <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[10px] font-black shadow-lg">GERIR</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        function filterTable() {
-            const termo = document.getElementById('searchInput').value.toLowerCase();
-            const tipo = document.getElementById('filterTipo').value;
-            let filtered = dbCache;
-            
-            if(tipo) filtered = filtered.filter(i => i.tipo === tipo);
-            if(termo) filtered = filtered.filter(i => i.nome.toLowerCase().includes(termo));
-            
-            renderTable(filtered);
-        }
-
-        // --- MODAL ---
         function openAnalyzeModal(nome) {
-            const registro = dbCache.find(i => i.nome === nome);
-            if (!registro) return;
+            const reg = dbCache.find(i => i.nome === nome);
+            if(!reg) return;
+            document.getElementById('modalNome').innerText = reg.nome;
+            document.getElementById('editNome').value = reg.nome;
+            document.getElementById('editTel').value = reg.telefone;
+            document.getElementById('editLider').value = reg.lider || '';
+            document.getElementById('editStatus').value = reg.status || 'Pendente 1° Contato';
+            document.getElementById('editObs').value = reg.observacoes || '';
+            document.getElementById('editDataBatismo').value = reg.data_batismo ? new Date(reg.data_batismo).toISOString().split('T')[0] : '';
             
-            document.getElementById('modalSubtitle').innerText = registro.nome;
-            document.getElementById('editNome').value = registro.nome;
-            document.getElementById('editStatus').value = registro.status || 'Pendente 1° Contato';
-            document.getElementById('editObs').value = registro.observacoes || '';
-            document.getElementById('editDataBatismo').value = registro.data_batismo || '';
-            
+            // Controle de Botões de WhatsApp
+            document.getElementById('btnWppBatismo').classList.toggle('hidden', !document.getElementById('editDataBatismo').value);
+            document.getElementById('btnWppIntegração').classList.toggle('hidden', reg.status !== 'Integração Presidencial');
+
             document.getElementById('modalAnalyze').style.display = 'flex';
         }
 
         async function salvarEvolucao(e) {
             e.preventDefault();
-            const btn = document.getElementById('btnSalvar');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
-            btn.disabled = true;
-
             const payload = {
                 action: 'update',
                 nome: document.getElementById('editNome').value,
                 status: document.getElementById('editStatus').value,
                 dataBatismo: document.getElementById('editDataBatismo').value,
+                lider: document.getElementById('editLider').value,
                 obs: document.getElementById('editObs').value
             };
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            alert("Sincronizado!"); closeModal(); carregarDados(true);
+        }
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const res = await response.json();
-                if(res.result === 'success') {
-                    alert("✅ EVOLUÇÃO REGISTRADA!");
-                    closeModal();
-                    carregarDados(true);
-                }
-            } catch(e) { alert("Erro ao salvar."); }
-            finally {
-                btn.innerHTML = 'ATUALIZAR EVOLUÇÃO';
-                btn.disabled = false;
-            }
+        function enviarWppBatismo() {
+            const nome = document.getElementById('modalNome').innerText;
+            const tel = document.getElementById('editTel').value;
+            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
+            const hora = document.getElementById('editHoraBatismo').value;
+            const obs = document.getElementById('editObs').value;
+            
+            let msg = `Olá *${nome}*! Graça e Paz. 👋%0A%0AConfirmamos seu Batismo para o dia *${data}* às *${hora}h*.%0A%0A⚠️ *Importante:* Traga roupa branca e toalha.%0A%0A📲 Baixe nosso App para seu certificado: https://link.app.igreja`;
+            if(obs) msg += `%0A%0A📝 *Observação:* ${obs}`;
+            
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
+        }
+
+        function enviarWppIntegração() {
+            const nome = document.getElementById('modalNome').innerText;
+            const tel = document.getElementById('editTel').value;
+            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
+            const hora = document.getElementById('editHoraBatismo').value;
+            
+            let msg = `Olá *${nome}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0ASua presença é fundamental!`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
+        }
+
+        // GESTÃO USUÁRIOS
+        async function switchView(v) {
+            document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard');
+            document.getElementById('view-users').classList.toggle('hidden', v !== 'users');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(v === 'users') carregarUsuarios();
+        }
+
+        async function carregarUsuarios() {
+            const div = document.getElementById('usersList');
+            div.innerHTML = 'Buscando equipe...';
+            const res = await fetch(`${API_URL}?action=getUsers`);
+            const users = await res.json();
+            div.innerHTML = users.map(u => `
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                    <p class="font-black text-blue-900 uppercase italic">${u.nome}</p>
+                    <p class="text-xs text-slate-400 font-bold">${u.email}</p>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-[9px] font-black bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${u.nivel}</span>
+                        <button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" class="text-[10px] font-bold ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase">${u.status === 'Ativo' ? 'Desativar' : 'Reativar'}</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function salvarNovoUsuario(e) {
+            e.preventDefault();
+            const payload = {
+                action: 'manageUser', subAction: 'create',
+                nome: document.getElementById('uNome').value,
+                email: document.getElementById('uEmail').value,
+                senha: document.getElementById('uSenha').value,
+                nivel: document.getElementById('uNivel').value
+            };
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            alert("Equipe atualizada!"); carregarUsuarios();
+        }
+
+        async function toggleUserStatus(email, status) {
+            if(!confirm("Deseja alterar o acesso deste usuário?")) return;
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'manageUser', subAction: 'status', email: email, newStatus: status }) });
+            carregarUsuarios();
         }
 
         function closeModal() { document.getElementById('modalAnalyze').style.display = 'none'; }
-        function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlayMenu').classList.toggle('active'); }
-        
-        function switchView(viewName) {
-            document.querySelectorAll('.content > div').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`view-${viewName}`).classList.remove('hidden');
-            if(viewName === 'relatorios') carregarRelatorios();
-            toggleMenu();
-        }
-
-        async function carregarRelatorios() {
-            const container = document.getElementById('relatorio-content');
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=getRelatorios`);
-                const data = await res.json();
-                container.innerHTML = `
-                    <div class="border-l-4 border-blue-900 pl-4">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Conversões (Total)</p>
-                        <p class="text-xl font-black">Aceitação: ${data.aceitacao}</p>
-                        <p class="text-xl font-black">Reconciliação: ${data.reconciliacao}</p>
-                    </div>
-                    <div class="border-l-4 border-green-600 pl-4">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Batismo</p>
-                        <p class="text-xl font-black">Já Batizados: ${data.batizados}</p>
-                        <p class="text-xl font-black text-red-500">A Encaminhar: ${data.naoBatizados}</p>
-                    </div>
-                `;
-            } catch(e) { container.innerHTML = "Erro ao carregar métricas."; }
-        }
-
-        window.onload = () => {
-            const session = localStorage.getItem('novoCaminhoSession');
-            if(session) iniciarSessao(JSON.parse(session));
+        function logout() { localStorage.removeItem('dinc_v2_session'); location.reload(); }
+        window.onload = () => { 
+            const session = localStorage.getItem('dinc_v2_session');
+            if(session) iniciarSessao(JSON.parse(session)); 
         };
     </script>
 </body>
