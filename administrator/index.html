@@ -5,19 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DINC GESTÃO - Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s; z-index: 40; }
+        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s; z-index: 50; }
         .content { margin-left: 250px; padding: 2rem; transition: margin-left 0.3s; }
-        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .sidebar.active { transform: translateX(0); } .content { margin-left: 0; padding: 1rem; } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .content { margin-left: 0; padding-top: 5rem; }
+            .overlay-active { display: block !important; }
+        }
         .nav-item.active { background: #1e40af; border-left: 4px solid #fbbf24; }
         .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        #mobile-header { display: none; }
+        @media (max-width: 768px) { #mobile-header { display: flex; } }
+        @media print { .no-print { display: none !important; } .sidebar { display: none; } .content { margin-left: 0; } }
     </style>
 </head>
 <body>
+
+    <div id="sidebar-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-[45] hidden no-print"></div>
 
     <div id="login-screen" class="fixed inset-0 z-[110] bg-[#0d2d5a] flex items-center justify-center">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
@@ -32,153 +44,143 @@
         </div>
     </div>
 
-    <div id="sidebar" class="sidebar flex flex-col">
-        <div class="p-8 text-center border-b border-blue-800 relative">
+    <header id="mobile-header" class="fixed top-0 left-0 right-0 h-16 bg-[#0d2d5a] text-white z-40 px-4 items-center justify-between shadow-lg no-print">
+        <button onclick="toggleMenu()" class="text-2xl p-2"><i class="fa-solid fa-bars"></i></button>
+        <span class="font-black italic tracking-widest">DINC GESTÃO</span>
+        <div class="w-10 h-10 bg-blue-800 rounded-full flex items-center justify-center font-bold text-sm border border-blue-400" id="mobInit">?</div>
+    </header>
+
+    <div id="sidebar" class="sidebar flex flex-col no-print">
+        <div class="p-8 text-center border-b border-blue-800">
             <h2 class="text-2xl font-black text-yellow-500 italic tracking-tighter">DINC</h2>
-            <p class="text-[9px] text-blue-300 uppercase font-bold tracking-widest">Gestão de Almas</p>
+            <p class="text-[9px] text-blue-300 uppercase font-bold tracking-widest">Gestão Master</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
             <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active block p-3 rounded font-bold text-sm transition-all"><i class="fa-solid fa-users w-8 text-yellow-500"></i> Convertidos</a>
-            <a href="#" id="btnMenuUsers" onclick="switchView('users')" class="hidden block p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-user-shield w-8"></i> Equipe / Usuários</a>
-            <a href="#" onclick="window.print()" class="block p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-print w-8"></i> Imprimir Lista</a>
+            <a href="#" id="btnMenuUsers" onclick="switchView('users')" class="hidden block p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-user-shield w-8"></i> Gestão de Equipe</a>
+            <button onclick="gerarRelatorioPDF()" class="w-full text-left p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-file-pdf w-8"></i> Imprimir PDF</button>
         </nav>
         <div class="p-6 border-t border-blue-800 text-xs font-bold bg-blue-950/50">
-            <p id="userNameDisplay" class="text-yellow-500 uppercase truncate"></p>
-            <button onclick="logout()" class="text-red-400 hover:text-white mt-2 flex items-center gap-2"><i class="fa-solid fa-power-off"></i> Sair do Sistema</button>
+            <p id="userNameDisplay" class="text-yellow-500 uppercase truncate mb-1"></p>
+            <button onclick="logout()" class="text-red-400 hover:text-white flex items-center gap-2"><i class="fa-solid fa-power-off"></i> Sair do Sistema</button>
         </div>
     </div>
 
     <div class="content">
-        <div class="md:hidden flex justify-between items-center mb-6">
-            <button onclick="document.getElementById('sidebar').classList.toggle('active')" class="text-blue-900 p-2"><i class="fa-solid fa-bars text-2xl"></i></button>
-            <span class="font-bold text-blue-900 italic uppercase">DINC GESTÃO</span>
-            <div class="w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center text-white font-bold text-xs" id="mobInit">A</div>
-        </div>
-
         <div id="view-dashboard">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <h2 class="text-2xl font-black text-blue-900 italic tracking-tighter uppercase">Gestão de Almas</h2>
-                <div class="flex gap-2">
-                    <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black outline-none uppercase text-gray-600">
-                        <option value="">Filtrar Mês</option><option value="/01/">Janeiro</option><option value="/02/">Fevereiro</option><option value="/03/">Março</option>
-                        <option value="/04/">Abril</option><option value="/05/">Maio</option><option value="/06/">Junho</option><option value="/07/">Julho</option>
+                <div class="flex flex-wrap gap-2">
+                    <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black outline-none bg-white">
+                        <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option>
                     </select>
-                    <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black outline-none uppercase text-gray-600">
-                        <option value="">Período</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option>
+                    <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black outline-none bg-white uppercase">
+                        <option value="">Todos os Meses</option><option value="/01/">Janeiro</option><option value="/02/">Fevereiro</option><option value="/03/">Março</option><option value="/04/">Abril</option><option value="/05/">Maio</option><option value="/06/">Junho</option>
+                    </select>
+                    <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black outline-none bg-white uppercase">
+                        <option value="">Todos Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option>
                     </select>
                 </div>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-wrap gap-4 items-center border border-slate-100">
-                <select id="fBatizado" onchange="filterTable()" class="border rounded-xl p-2 text-[10px] font-black text-gray-500 uppercase outline-none">
-                    <option value="">Batizado?</option><option value="Sim">Sim</option><option value="Não">Não</option>
-                </select>
-                <select id="fStatus" onchange="filterTable()" class="border rounded-xl p-2 text-[10px] font-black text-gray-500 uppercase outline-none">
-                    <option value="">Status Integração</option>
-                    <option value="Pendente">Pendente</option>
-                    <option value="Em Integração">Em Integração</option>
-                    <option value="Batismo Agendado">Batismo Agendado</option>
-                    <option value="Concluido">Concluído</option>
-                </select>
-                <input type="text" id="searchInput" placeholder="Buscar por nome, líder ou observação..." class="flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterTable()">
-                <button onclick="carregarDados(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold hover:bg-blue-700 transition"><i class="fa-solid fa-sync"></i></button>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Filtrados</p><h3 class="text-2xl md:text-3xl font-black text-gray-800" id="stat-total">0</h3></div>
+                <div class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border-l-4 border-green-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Aceitação</p><h3 class="text-2xl md:text-3xl font-black text-green-700" id="stat-aceitacao">0</h3></div>
+                <div class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border-l-4 border-yellow-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Reconciliação</p><h3 class="text-2xl md:text-3xl font-black text-yellow-700" id="stat-reconciliacao">0</h3></div>
+                <div class="bg-white p-4 md:p-6 rounded-3xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Não Batizados</p><h3 class="text-2xl md:text-3xl font-black text-purple-700" id="stat-batismo">0</h3></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
+                <div class="flex gap-2 w-full md:w-auto">
+                    <select id="fBatizado" onchange="filterTable()" class="flex-1 border rounded-xl p-2 text-[10px] font-black text-gray-500 uppercase outline-none">
+                        <option value="">Batizado?</option><option value="Sim">Sim</option><option value="Não">Não</option>
+                    </select>
+                    <select id="fStatus" onchange="filterTable()" class="flex-1 border rounded-xl p-2 text-[10px] font-black text-gray-500 uppercase outline-none">
+                        <option value="">Status</option><option value="Pendente">Pendente</option><option value="Batismo Agendado">Agendado</option><option value="Concluido">Concluído</option>
+                    </select>
+                </div>
+                <input type="text" id="searchInput" placeholder="Busca inteligente..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterTable()">
+                <button onclick="carregarDados(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold hover:bg-blue-700 transition w-full md:w-auto"><i class="fa-solid fa-sync"></i></button>
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
-                        <tr>
-                            <th class="p-5">Convertido / Nascimento</th>
-                            <th class="p-5">Decisão / Período</th>
-                            <th class="p-5">Líder Resp.</th>
-                            <th class="p-5">Status</th>
-                            <th class="p-5 text-right">Gestão</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body" class="text-xs divide-y">
-                        <tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest animate-pulse italic">Aguardando API do Cérebro...</td></tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
+                            <tr><th class="p-5">Informações</th><th class="p-5">Decisão / Período</th><th class="p-5">Líder</th><th class="p-5">Status</th><th class="p-5 text-right">Ação</th></tr>
+                        </thead>
+                        <tbody id="table-body" class="text-xs divide-y"></tbody>
+                    </table>
+                </div>
+                <div class="p-4 bg-slate-50 border-t flex justify-between items-center no-print">
+                    <button onclick="changePage(-1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Anterior</button>
+                    <span id="pageInfo" class="text-[10px] font-bold text-slate-400">Página 1 de 1</span>
+                    <button onclick="changePage(1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Próxima</button>
+                </div>
             </div>
         </div>
 
         <div id="view-users" class="hidden">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <h2 class="text-2xl font-black text-blue-900 italic tracking-tighter uppercase">Gestão de Equipe</h2>
-                <button onclick="document.getElementById('modalUser').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] shadow-lg hover:bg-blue-700 transition uppercase tracking-widest">+ Novo Usuário</button>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <select id="fUserStatus" onchange="carregarUsuarios()" class="p-2 border rounded-xl text-[10px] font-black outline-none uppercase bg-white">
+                        <option value="Ativo">Ativos</option><option value="Inativo">Inativos</option><option value="Todos">Todos</option>
+                    </select>
+                    <button onclick="document.getElementById('modalUser').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] shadow-lg hover:bg-blue-700 transition uppercase tracking-widest flex-1 md:flex-none">+ Novo Colaborador</button>
+                </div>
             </div>
-            <div id="usersList" class="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans"></div>
+            <div id="usersList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
     </div>
 
     <div id="modalAnalyze" class="modal-analise">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in duration-300">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4">
             <div class="bg-blue-900 p-8 text-white flex justify-between items-center relative">
                 <div class="absolute top-0 left-0 w-full h-1 bg-yellow-500"></div>
-                <div>
-                    <h3 id="modalNome" class="font-black text-xl uppercase italic tracking-tighter leading-tight">--</h3>
-                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest">Painel de Acompanhamento</p>
-                </div>
-                <button onclick="closeModal()" class="text-blue-300 hover:text-white p-2 transition-all"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <div><h3 id="modalNome" class="font-black text-xl uppercase italic tracking-tighter leading-tight">--</h3><p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest">Painel de Acompanhamento</p></div>
+                <button onclick="closeModal()" class="text-blue-300 hover:text-white p-2"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
-            <form id="formEdit" class="p-8 space-y-4" onsubmit="salvarEvolucao(event)">
-                <input type="hidden" id="editNome">
-                <input type="hidden" id="editTel">
+            <form id="formEdit" class="p-8 space-y-4 max-h-[70vh] overflow-y-auto custom-scroll" onsubmit="salvarEvolucao(event)">
+                <input type="hidden" id="editNome"><input type="hidden" id="editTel">
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Previsão de Batismo</label>
-                        <input type="date" id="editDataBatismo" class="w-full p-3 border rounded-xl outline-none font-bold text-xs focus:ring-2 focus:ring-blue-900">
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Horário Sugerido</label>
-                        <input type="time" id="editHoraBatismo" value="09:00" class="w-full p-3 border rounded-xl outline-none font-bold text-xs">
-                    </div>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data Batismo</label><input type="date" id="editDataBatismo" class="w-full p-3 border rounded-xl outline-none font-bold text-xs"></div>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Horário</label><input type="time" id="editHoraBatismo" value="09:00" class="w-full p-3 border rounded-xl outline-none font-bold text-xs"></div>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Líder Responsável</label>
-                    <input type="text" id="editLider" placeholder="QUEM ESTÁ CUIDANDO?" class="w-full p-3 border rounded-xl outline-none font-bold text-xs uppercase focus:ring-2 focus:ring-blue-900">
-                </div>
+                <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Líder Responsável</label><input type="text" id="editLider" class="w-full p-3 border rounded-xl outline-none font-bold text-xs uppercase"></div>
                 <div>
                     <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status da Alma</label>
                     <select id="editStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
-                        <option value="Pendente 1° Contato">Pendente 1° Contato</option>
-                        <option value="Em Integração">Em Integração</option>
-                        <option value="Discipulado">Em Discipulado</option>
-                        <option value="Batismo Agendado">Batismo Agendado</option>
-                        <option value="Integração Presidencial">Integração Presidencial (Pastor Marcos)</option>
-                        <option value="Concluido">Concluído</option>
+                        <option value="Pendente 1° Contato">Pendente 1° Contato</option><option value="Em Integração">Em Integração</option><option value="Discipulado">Em Discipulado</option><option value="Batismo Agendado">Batismo Agendado</option><option value="Integração Presidencial">Integração Presidencial</option><option value="Concluido">Concluído</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Observações da Alma</label>
-                    <textarea id="editObs" rows="3" class="w-full p-3 border rounded-xl resize-none outline-none font-medium text-xs uppercase" placeholder="ANOTAÇÕES DO LÍDER..."></textarea>
-                </div>
+                <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Observações da Alma</label><textarea id="editObs" rows="3" class="w-full p-3 border rounded-xl resize-none outline-none font-medium text-xs uppercase" placeholder="ANOTAÇÕES DO LÍDER..."></textarea></div>
                 <button type="submit" id="btnSalvar" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest">ATUALIZAR REGISTRO</button>
             </form>
         </div>
     </div>
 
     <div id="modalUser" class="modal-analise">
-        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-yellow-500">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-yellow-500 m-4">
             <h3 class="font-black text-blue-900 uppercase italic mb-6 tracking-tighter">Novo Integrante DINC</h3>
             <form onsubmit="salvarNovoUsuario(event)" class="space-y-4">
                 <input id="uNome" placeholder="NOME COMPLETO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                 <input id="uEmail" placeholder="E-MAIL" type="email" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                 <input id="uSenha" placeholder="SENHA DE ACESSO" type="password" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
-                <select id="uNivel" class="w-full p-4 border rounded-2xl font-black bg-slate-50 outline-none text-xs uppercase">
-                    <option value="Padrao">Voluntário DINC</option>
-                    <option value="Coordenador">Coordenador DINC</option>
-                </select>
+                <select id="uNivel" class="w-full p-4 border rounded-2xl font-black bg-slate-50 outline-none text-xs uppercase"><option value="Padrao">Voluntário</option><option value="Coordenador">Coordenador</option></select>
                 <button type="submit" id="btnCriarUser" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] tracking-widest">CRIAR ACESSO</button>
             </form>
-            <button onclick="document.getElementById('modalUser').style.display='none'" class="mt-4 w-full text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
+            <button onclick="document.getElementById('modalUser').style.display='none'" class="mt-4 w-full text-[10px] font-black text-gray-300 uppercase tracking-widest">CANCELAR</button>
         </div>
     </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwqjPBQMQ3x0yZNPjh1RqEeZH_Wc7F2-GpVpGVERGd6MyjssvyUiegRV8wWW9n48Szv/exec'; 
         let dbCache = [];
+        let filteredCache = [];
         let currentUser = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
 
         async function realizarLogin(e) {
             e.preventDefault();
@@ -202,50 +204,78 @@
         function iniciarSessao(user) {
             currentUser = user;
             document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('userNameDisplay').innerText = `${user.nome} (${user.nivel})`;
+            document.getElementById('userNameDisplay').innerText = `OPERADOR: ${user.nome}`;
             document.getElementById('mobInit').innerText = user.nome.charAt(0).toUpperCase();
-            if(user.nivel === 'MASTER' || user.nivel === 'Coordenador') document.getElementById('btnMenuUsers').classList.remove('hidden');
+            
+            const nivel = String(user.nivel).toUpperCase();
+            if(nivel === 'MASTER' || nivel === 'COORDENADOR' || user.email.toLowerCase() === 'admin@dinc.org') {
+                document.getElementById('btnMenuUsers').classList.remove('hidden');
+            }
             carregarDados();
         }
 
         async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest"><i class="fa-solid fa-dna fa-spin mr-2"></i>Sincronizando Base...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest">Sincronizando...</td></tr>';
             try {
                 const res = await fetch(`${API_URL}?action=getDados`);
                 dbCache = await res.json();
                 filterTable();
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black">ERRO NA CONEXÃO</td></tr>'; }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase">Erro de Conexão</td></tr>'; }
         }
 
         function filterTable() {
+            const ano = document.getElementById('fAno').value;
             const mes = document.getElementById('fMes').value;
             const periodo = document.getElementById('fPeriodo').value;
             const batizado = document.getElementById('fBatizado').value;
             const status = document.getElementById('fStatus').value;
             const busca = document.getElementById('searchInput').value.toLowerCase();
 
-            let dados = dbCache.filter(i => {
-                const checkMes = mes === "" || (i.data || "").includes(mes);
+            filteredCache = dbCache.filter(i => {
+                const checkData = String(i.data || "").includes(ano) && (mes === "" || String(i.data || "").includes(mes));
                 const checkPeriodo = periodo === "" || i.periodo === periodo;
                 const checkBatizado = batizado === "" || i.batizado === batizado;
                 const checkStatus = status === "" || (i.status || "").includes(status);
                 const checkBusca = busca === "" || 
-                                   i.nome.toLowerCase().includes(busca) || 
-                                   (i.lider || "").toLowerCase().includes(busca) ||
-                                   (i.observacoes || "").toLowerCase().includes(busca);
-                return checkMes && checkPeriodo && checkBatizado && checkStatus && checkBusca;
+                                   String(i.nome || "").toLowerCase().includes(busca) || 
+                                   String(i.lider || "").toLowerCase().includes(busca) ||
+                                   String(i.observacoes || "").toLowerCase().includes(busca);
+                return checkData && checkPeriodo && checkBatizado && checkStatus && checkBusca;
             });
-            renderTable(dados);
+            
+            currentPage = 1;
+            atualizarKPIs();
+            renderTable();
         }
 
-        function renderTable(lista) {
+        function atualizarKPIs() {
+            document.getElementById('stat-total').innerText = filteredCache.length;
+            document.getElementById('stat-aceitacao').innerText = filteredCache.filter(i => i.tipo === 'Aceitação').length;
+            document.getElementById('stat-reconciliacao').innerText = filteredCache.filter(i => i.tipo === 'Reconciliação').length;
+            document.getElementById('stat-batismo').innerText = filteredCache.filter(i => i.batizado === 'Não').length;
+        }
+
+        function renderTable() {
             const tbody = document.getElementById('table-body');
-            tbody.innerHTML = lista.map(item => `
-                <tr class="hover:bg-blue-50/50 transition">
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const lista = filteredCache.slice(start, end);
+
+            if(lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300">NENHUM REGISTRO</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = lista.map(item => {
+                const saudacao = `Olá *${item.nome.split(' ')[0]}*! Aqui é o(a) *${currentUser.nome.split(' ')[0]}* do DINC. Graça e Paz! 👋`;
+                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+
+                return `
+                <tr class="hover:bg-blue-50 transition border-b">
                     <td class="p-5">
                         <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${item.data} | ${item.nascimento || 'Não informado'}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">${item.data || 'Sem Data'} | ${item.nascimento || 'Não informado'}</p>
                     </td>
                     <td class="p-5">
                         <span class="status-badge ${item.tipo === 'Aceitação' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${item.tipo}</span>
@@ -253,11 +283,36 @@
                     </td>
                     <td class="p-5 font-bold text-slate-500 uppercase text-[9px] italic">${item.lider || '-'}</td>
                     <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status || 'Pendente'}</td>
-                    <td class="p-5 text-right">
-                        <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
+                    <td class="p-5 text-right flex justify-end gap-2">
+                        <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${encodeURIComponent(saudacao)}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                        <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow transition-all active:scale-95">GERIR</button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`;
+            }).join('');
+
+            const totalPages = Math.ceil(filteredCache.length / itemsPerPage) || 1;
+            document.getElementById('pageInfo').innerText = `Página ${currentPage} de ${totalPages}`;
+        }
+
+        function changePage(dir) {
+            const max = Math.ceil(filteredCache.length / itemsPerPage);
+            currentPage = Math.min(Math.max(1, currentPage + dir), max);
+            renderTable();
+        }
+
+        async function gerarRelatorioPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const mesNome = document.getElementById('fMes').options[document.getElementById('fMes').selectedIndex].text;
+            
+            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE CANDIDATOS", 15, 15);
+            doc.setFontSize(10); doc.text(`Ano: ${document.getElementById('fAno').value} | Mês: ${mesNome}`, 15, 22);
+
+            const columns = ["NOME", "TELEFONE", "BATIZADO?", "STATUS"];
+            const rows = filteredCache.map(i => [i.nome, i.telefone, i.batizado, i.status]);
+
+            doc.autoTable({ head: [columns], body: rows, startY: 30, theme: 'grid', headStyles: { fillColor: [13, 45, 90] } });
+            doc.save(`Relatorio_DINC_${document.getElementById('fAno').value}.pdf`);
         }
 
         function openAnalyzeModal(nome) {
@@ -269,7 +324,14 @@
             document.getElementById('editLider').value = reg.lider || '';
             document.getElementById('editStatus').value = reg.status || 'Pendente 1° Contato';
             document.getElementById('editObs').value = reg.observacoes || '';
-            document.getElementById('editDataBatismo').value = reg.data_batismo ? reg.data_batismo.split('/').reverse().join('-') : '';
+            
+            // Corrige exibição de data ISO para input date
+            if (reg.data_batismo && String(reg.data_batismo).includes('/')) {
+                document.getElementById('editDataBatismo').value = reg.data_batismo.split('/').reverse().join('-');
+            } else {
+                document.getElementById('editDataBatismo').value = '';
+            }
+            
             document.getElementById('modalAnalyze').style.display = 'flex';
         }
 
@@ -277,31 +339,19 @@
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
             const novoStatus = document.getElementById('editStatus').value;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
 
             const payload = {
-                action: 'update',
-                nome: document.getElementById('editNome').value,
-                status: novoStatus,
-                dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
-                lider: document.getElementById('editLider').value,
-                obs: document.getElementById('editObs').value
+                action: 'update', nome: document.getElementById('editNome').value,
+                status: novoStatus, dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
+                lider: document.getElementById('editLider').value, obs: document.getElementById('editObs').value
             };
 
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                
-                // COMPORTAMENTO DINÂMICO DE WHATSAPP
-                if(novoStatus === 'Batismo Agendado') {
-                    enviarWppBatismo();
-                } else if(novoStatus === 'Integração Presidencial') {
-                    enviarWppIntegração();
-                }
-
-                alert("Sincronizado com Sucesso!");
-                closeModal(); carregarDados(true);
-            } catch(e) { alert("Falha ao salvar."); }
+                if(novoStatus === 'Batismo Agendado') enviarWppBatismo();
+                alert("Registro Sincronizado!"); closeModal(); carregarDados();
+            } catch(e) { alert("Erro de conexão."); }
             finally { btn.innerHTML = 'ATUALIZAR REGISTRO'; btn.disabled = false; }
         }
 
@@ -312,90 +362,78 @@
             const hora = document.getElementById('editHoraBatismo').value;
             const obs = document.getElementById('editObs').value;
             
-            let msg = `Olá *${nome.toUpperCase()}*! Graça e Paz. 👋%0A%0APassando para confirmar seu *BATISMO*! 🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar com 30 min de antecedência.%0A- Trazer uma peça de roupa extra e toalha.%0A%0A📲 *IMPORTANTE:* Faça seu cadastro completo no App Eklesia para gerarmos seu certificado:%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
-            
+            let msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
             if(obs) msg += `%0A%0A📝 *OBS:* ${obs}`;
             window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
         }
 
-        function enviarWppIntegração() {
-            const nome = document.getElementById('modalNome').innerText;
-            const tel = document.getElementById('editTel').value;
-            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
-            const hora = document.getElementById('editHoraBatismo').value;
-            
-            let msg = `Olá *${nome.toUpperCase()}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0ASua presença é fundamental!`;
-            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
-        }
-
-        async function switchView(v) {
-            document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard');
-            document.getElementById('view-users').classList.toggle('hidden', v !== 'users');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`nav-${v === 'users' ? 'dashboard' : v}`).classList.add('active');
-            if(v === 'users') carregarUsuarios();
-        }
-
         async function carregarUsuarios() {
             const div = document.getElementById('usersList');
-            div.innerHTML = '<p class="col-span-full text-center py-10 font-bold text-gray-400">BUSCANDO COLABORADORES...</p>';
+            const statusFiltro = document.getElementById('fUserStatus').value;
+            div.innerHTML = '<p class="col-span-full text-center py-10 font-bold text-gray-400">SINCRONIZANDO EQUIPE...</p>';
             try {
                 const res = await fetch(`${API_URL}?action=getUsers`);
-                const users = await res.json();
-                div.innerHTML = users.map(u => `
+                let users = await res.json();
+                if(statusFiltro !== 'Todos') users = users.filter(u => u.status === statusFiltro);
+                
+                div.innerHTML = users.map(u => {
+                    const isMaster = u.email.toLowerCase() === 'admin@dinc.org' || u.nivel.toUpperCase() === 'MASTER';
+                    return `
                     <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between">
                         <div>
-                            <p class="font-black text-blue-900 uppercase italic tracking-tighter">${u.nome}</p>
+                            <p class="font-black text-blue-900 uppercase italic tracking-tighter leading-tight">${u.nome}</p>
                             <p class="text-[10px] text-slate-400 font-black tracking-widest uppercase">${u.email}</p>
                         </div>
-                        <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-50">
+                        <div class="flex justify-between items-center mt-6 pt-4 border-t">
                             <span class="text-[8px] font-black bg-blue-50 text-blue-800 px-3 py-1 rounded-full uppercase tracking-widest">${u.nivel}</span>
-                            ${u.email.toLowerCase() === 'admin@dinc.org' ? 
-                                '<span class="text-[8px] text-blue-900 font-black uppercase">VITALÍCIO</span>' : 
+                            ${isMaster ? 
+                                '<span class="text-[8px] text-blue-900 font-black uppercase tracking-widest">Acesso Vitalício</span>' : 
                                 `<button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" 
-                                   class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase tracking-widest hover:underline">
-                                   ${u.status === 'Ativo' ? 'Desativar' : 'Reativar'}
-                                </button>`
+                                   class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase hover:underline transition-all">Trocar Status</button>`
                             }
                         </div>
-                    </div>
-                `).join('');
-            } catch(e) { div.innerHTML = "Erro ao listar."; }
+                    </div>`;
+                }).join('');
+            } catch(e) { div.innerHTML = "Erro ao listar equipe."; }
         }
 
         async function salvarNovoUsuario(e) {
             e.preventDefault();
             const btn = document.getElementById('btnCriarUser');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-            const payload = {
-                action: 'manageUser', subAction: 'create',
-                nome: document.getElementById('uNome').value,
-                email: document.getElementById('uEmail').value,
-                senha: document.getElementById('uSenha').value,
-                nivel: document.getElementById('uNivel').value
-            };
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            const payload = { action: 'manageUser', subAction: 'create', nome: document.getElementById('uNome').value, email: document.getElementById('uEmail').value, senha: document.getElementById('uSenha').value, nivel: document.getElementById('uNivel').value };
             try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                alert("Novo acesso liberado!"); 
-                document.getElementById('modalUser').style.display='none';
-                carregarUsuarios();
-            } catch(e) { alert("Erro ao criar."); }
+                const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                alert("Colaborador Cadastrado!"); document.getElementById('modalUser').style.display='none'; carregarUsuarios();
+            } catch(e) { alert("Erro de conexão."); }
             finally { btn.innerHTML = 'CRIAR ACESSO'; btn.disabled = false; }
         }
 
         async function toggleUserStatus(email, status) {
-            if(!confirm("Confirmar alteração de acesso?")) return;
+            if(!confirm("Deseja mudar o status de acesso?")) return;
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'manageUser', subAction: 'status', email: email, newStatus: status }), mode: 'no-cors' });
                 carregarUsuarios();
             } catch(e) { alert("Erro."); }
         }
 
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('hidden');
+        }
+
         function closeModal() { document.getElementById('modalAnalyze').style.display = 'none'; }
         function logout() { localStorage.removeItem('dinc_v2_session'); location.reload(); }
+        function switchView(v) { 
+            document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard'); 
+            document.getElementById('view-users').classList.toggle('hidden', v !== 'users'); 
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+            if(v === 'users') { document.getElementById('btnMenuUsers').classList.add('active'); carregarUsuarios(); }
+            if(window.innerWidth < 768) toggleMenu();
+        }
         window.onload = () => { 
-            const session = localStorage.getItem('dinc_v2_session');
+            const session = localStorage.getItem('dinc_v2_session'); 
             if(session) iniciarSessao(JSON.parse(session)); 
         };
     </script>
