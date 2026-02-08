@@ -122,7 +122,6 @@
         <div id="view-crescimento" class="hidden">
             <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter mb-8">Crescimento do Reino</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card-crescimento"><p class="text-xs font-black text-gray-500 uppercase">Total de Membros</p><p class="text-3xl font-bold text-blue-900">--</p></div>
                 <div class="card-crescimento" style="border-top-color: #002e5d"><p class="text-xs font-black text-gray-500 uppercase">Novas Decisões (Mês)</p><p class="text-3xl font-bold text-blue-900" id="grow-decisoes">0</p></div>
                 <div class="card-crescimento"><p class="text-xs font-black text-gray-500 uppercase">Conversão Batismo</p><p class="text-3xl font-bold text-orange-500">0%</p></div>
             </div>
@@ -345,31 +344,104 @@
             }
             if(window.innerWidth < 768) toggleMenu();
         }
+        
+        
+        let currentPeriod = 'ano';
 
-        function initGrowChart() {
-            const ctx = document.getElementById('crescimentoChart').getContext('2d');
-            if(growChart) growChart.destroy();
-            
-            const periodos = { Manha: dbCache.filter(i => i.periodo === 'MANHÃ').length, Noite: dbCache.filter(i => i.periodo === 'NOITE').length };
-
-            growChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Manhã', 'Noite'],
-                    datasets: [{
-                        label: 'Novas Decisões',
-                        data: [periodos.Manha, periodos.Noite],
-                        backgroundColor: ['#0d2d5a', '#f47b20'],
-                        borderRadius: 12
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true } }
+        function filterCrescimento(periodo) {
+            currentPeriod = periodo;
+            document.querySelectorAll('.btn-periodo').forEach(btn => {
+                btn.classList.remove('bg-blue-900', 'text-white');
+                if(btn.innerText.toLowerCase() === periodo) {
+                    btn.classList.add('bg-blue-900', 'text-white');
                 }
             });
+            initGrowChart();
+        }
+
+   async function initGrowChart() {
+            const ano = document.getElementById('growAnoFiltro').value;
+            const ctx = document.getElementById('crescimentoChart').getContext('2d');
+            if(growChart) growChart.destroy();
+
+            try {
+                const res = await fetch(`${API_URL}?action=getCrescimento&ano=${ano}`);
+                const result = await res.json();
+                const dados = result.dados;
+
+                const labelsMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                let displayLabels = [...labelsMeses];
+                let dataAtual = [...dados.atual];
+                let dataAnterior = [...dados.anterior];
+
+                // Lógica de Agrupamento por Período
+                if (currentPeriod === 'trimestre') {
+                    displayLabels = ['1º Trim', '2º Trim', '3º Trim', '4º Trim'];
+                    dataAtual = [
+                        dataAtual.slice(0,3).reduce((a,b)=>a+b,0),
+                        dataAtual.slice(3,6).reduce((a,b)=>a+b,0),
+                        dataAtual.slice(6,9).reduce((a,b)=>a+b,0),
+                        dataAtual.slice(9,12).reduce((a,b)=>a+b,0)
+                    ];
+                    dataAnterior = [
+                        dataAnterior.slice(0,3).reduce((a,b)=>a+b,0),
+                        dataAnterior.slice(3,6).reduce((a,b)=>a+b,0),
+                        dataAnterior.slice(6,9).reduce((a,b)=>a+b,0),
+                        dataAnterior.slice(9,12).reduce((a,b)=>a+b,0)
+                    ];
+                } else if (currentPeriod === 'semestre') {
+                    displayLabels = ['1º Semestre', '2º Semestre'];
+                    dataAtual = [dataAtual.slice(0,6).reduce((a,b)=>a+b,0), dataAtual.slice(6,12).reduce((a,b)=>a+b,0)];
+                    dataAnterior = [dataAnterior.slice(0,6).reduce((a,b)=>a+b,0), dataAnterior.slice(6,12).reduce((a,b)=>a+b,0)];
+                } else if (currentPeriod === 'mes') {
+                    const mesAtual = new Date().getMonth();
+                    displayLabels = [labelsMeses[mesAtual]];
+                    dataAtual = [dataAtual[mesAtual]];
+                    dataAnterior = [dataAnterior[mesAtual]];
+                }
+
+                document.getElementById('grow-decisoes-periodo').innerText = dataAtual.reduce((a,b)=>a+b,0);
+
+                growChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: displayLabels,
+                        datasets: [
+                            {
+                                label: `Ano ${result.anoAtual}`,
+                                data: dataAtual,
+                                borderColor: '#f47b20',
+                                backgroundColor: '#f47b20',
+                                tension: 0.4,
+                                borderWidth: 4,
+                                fill: false,
+                                pointRadius: 5
+                            },
+                            {
+                                label: `Ano ${result.anoAnterior}`,
+                                data: dataAnterior,
+                                borderColor: '#002e5d',
+                                backgroundColor: '#002e5d',
+                                tension: 0.4,
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { weight: 'bold' } } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            } catch(e) { console.error("Erro no gráfico:", e); }
         }
 
         async function salvarCandidatoBatismo(e) {
@@ -388,22 +460,35 @@
             } catch(e) { alert("Erro ao salvar."); }
         }
 
-        async function excluirRegistroAtual() {
-            const nome = document.getElementById('editNome').value;
-            if(!confirm(`Deseja EXCLUIR permanentemente ${nome}? Esta ação não pode ser desfeita.`)) return;
-            
-            const payload = { action: 'delete', nome: nome };
-            try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                alert("Registro excluído com sucesso!");
-                closeModal();
-                carregarDados(true);
-            } catch(e) { alert("Erro ao excluir."); }
-        }
+      async function excluirRegistroAtual() {
+       const nome = document.getElementById('editNome').value;
+      const dataOriginal = document.getElementById('editNome').dataset.dataOriginal; // Captura a data salva
+
+      if(!confirm(`Deseja EXCLUIR permanentemente ${nome}? Esta ação não pode ser desfeita.`)) return;
+    
+      const payload = { 
+        action: 'delete', 
+        nome: nome, 
+        data: dataOriginal // Agora enviamos a data correta para o GS
+    };
+
+    try {
+        // Usamos POST comum. Como o GS não retorna CORS para POST, 
+        // tratamos o sucesso no bloco try
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+        
+        alert("Comando de exclusão enviado!");
+        closeModal();
+        carregarDados(true); // Recarrega a tabela
+    } catch(e) { 
+        alert("Erro ao excluir."); 
+    }
+}
 
         function openAnalyzeModal(nome) {
             const reg = dbCache.find(i => i.nome === nome);
             if(!reg) return;
+            document.getElementById('editNome').dataset.dataOriginal = reg.data;
             document.getElementById('modalNome').innerText = reg.nome;
             document.getElementById('editNome').value = reg.nome;
             document.getElementById('editTel').value = reg.telefone;
@@ -527,6 +612,8 @@
             const session = localStorage.getItem('dinc_v2_session'); 
             if(session) iniciarSessao(JSON.parse(session)); 
         };
+        
+        
     </script>
 </body>
 </html>
