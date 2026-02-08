@@ -131,17 +131,67 @@
             </div>
         </div>
 
-        <div id="view-batismo" class="hidden">
-            <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter mb-8">Candidatos ao Batismo</h2>
-            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 max-w-2xl">
-                <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest mb-6 italic">Cadastrar novo candidato manualmente</p>
-                <form onsubmit="salvarCandidatoBatismo(event)" class="space-y-4">
-                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Nome Completo</label><input type="text" id="bat-nome" class="w-full p-3 border rounded-xl outline-none text-xs font-bold uppercase" required></div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Telefone</label><input type="text" id="bat-tel" class="w-full p-3 border rounded-xl outline-none text-xs font-bold" required></div>
-                        <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Congregação</label><input type="text" id="bat-loja" class="w-full p-3 border rounded-xl outline-none text-xs font-bold uppercase" value="ADSA BRASIL MATRIZ"></div>
+          <div id="view-batismo" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic">Gestão de Batismos</h2>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="gerarPDFBatismo()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
+                    <button onclick="document.getElementById('modalNovoBatismo').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-1 hover:bg-blue-700 transition shadow-lg tracking-widest">+ Novo Candidato</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
+                <input type="text" id="searchBatismo" placeholder="Buscar candidato ao batismo..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterBatismo()">
+                <button onclick="carregarBatismos(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-full md:w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
+                            <tr><th class="p-5">Candidato / Cadastro</th><th class="p-5">Congregação</th><th class="p-5">Data Batismo</th><th class="p-5">Status</th><th class="p-5 text-right">Ação</th></tr>
+                        </thead>
+                        <tbody id="table-batismo" class="text-xs divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalNovoBatismo" class="modal-analise">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-blue-500 m-4 text-center">
+                <h3 class="font-black text-blue-900 uppercase italic mb-6">Novo Candidato ao Batismo</h3>
+                <form onsubmit="salvarNovoBatismo(event)" class="space-y-4 text-left">
+                    <input id="nbNome" placeholder="NOME COMPLETO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
+                    <input id="nbTel" placeholder="TELEFONE (DDD + NÚMERO)" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold focus:ring-2 focus:ring-blue-900" required>
+                    <input id="nbLoja" placeholder="CONGREGAÇÃO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" value="ADSA BRASIL MATRIZ" required>
+                    <button type="submit" id="btnSalvarBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] font-black italic">CADASTRAR CANDIDATO</button>
+                </form>
+                <button onclick="document.getElementById('modalNovoBatismo').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
+            </div>
+        </div>
+
+        <div id="modalEditBatismo" class="modal-analise">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-blue-900">
+                <div class="bg-blue-900 p-8 text-white flex justify-between items-center relative">
+                    <div><h3 id="editBatNome" class="font-black text-xl uppercase italic">--</h3><p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest font-black italic">Gerenciar Batismo</p></div>
+                    <button onclick="document.getElementById('modalEditBatismo').style.display='none'" class="text-blue-300 hover:text-white p-2 transition-all"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+                <form id="formEditBatismo" class="p-8 space-y-4" onsubmit="atualizarBatismo(event)">
+                    <input type="hidden" id="ebNome">
+                    <input type="hidden" id="ebTel">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status do Batismo</label>
+                        <select id="ebStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
+                            <option value="Pendente de Agendamento">Pendente de Agendamento</option>
+                            <option value="Batismo Agendado">Batismo Agendado</option>
+                            <option value="Ausente">Ausente</option>
+                            <option value="Batismo Realizado">Batismo Realizado</option>
+                        </select>
                     </div>
-                    <button type="submit" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] tracking-widest italic mt-4">CADASTRAR CANDIDATO</button>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data Agendada</label><input type="date" id="ebData" class="w-full p-3 border rounded-xl outline-none font-bold text-xs"></div>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Congregação</label><input type="text" id="ebLoja" class="w-full p-3 border rounded-xl outline-none font-bold text-xs uppercase"></div>
+                    
+                    <button type="submit" id="btnUpdateBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest font-black italic">ATUALIZAR CANDIDATO</button>
                 </form>
             </div>
         </div>
@@ -236,6 +286,7 @@
                 document.getElementById('btnMenuUsers').classList.remove('hidden');
             }
             carregarDados();
+            carregarBatismos()
         }
 
         async function carregarDados(force = false) {
@@ -613,7 +664,139 @@
             if(session) iniciarSessao(JSON.parse(session)); 
         };
         
-        
+        let batismoCache = [];
+        let filteredBatismo = [];
+
+        async function carregarBatismos(force = false) {
+            const tbody = document.getElementById('table-batismo');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest">Sincronizando Batismos...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}?action=getBatismos`);
+                batismoCache = await res.json();
+                filterBatismo();
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Falha ao conectar aos Batismos.</td></tr>'; }
+        }
+
+        function filterBatismo() {
+            const busca = document.getElementById('searchBatismo').value.toLowerCase();
+            filteredBatismo = batismoCache.filter(i => 
+                String(i.nome_candidato || "").toLowerCase().includes(busca) || 
+                String(i.congregacao || "").toLowerCase().includes(busca)
+            );
+            renderTableBatismo();
+        }
+
+        function renderTableBatismo() {
+            const tbody = document.getElementById('table-batismo');
+            if(filteredBatismo.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
+                return;
+            }
+            tbody.innerHTML = filteredBatismo.map(item => {
+                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+                const msgWpp = `Olá *${item.nome_candidato.split(' ')[0]}*! 👋 Confirmamos seu *BATISMO*!🌊%0A🗓️ Data: *${item.data_batismo || 'A definir'}*%0A📍 Local: *${item.congregacao}*`;
+                
+                return `
+                <tr class="hover:bg-blue-50 transition border-b">
+                    <td class="p-5">
+                        <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro}</p>
+                    </td>
+                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px]">${item.congregacao}</td>
+                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px] italic">${item.data_batismo || '-'}</td>
+                    <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status}</td>
+                    <td class="p-5 text-right flex justify-end gap-2">
+                        <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${msgWpp}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                        <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function openEditBatismo(nome) {
+            const reg = batismoCache.find(i => i.nome_candidato === nome);
+            if(!reg) return;
+            document.getElementById('editBatNome').innerText = reg.nome_candidato;
+            document.getElementById('ebNome').value = reg.nome_candidato;
+            document.getElementById('ebTel').value = reg.telefone;
+            document.getElementById('ebLoja').value = reg.congregacao;
+            document.getElementById('ebStatus').value = reg.status;
+            
+            if (reg.data_batismo) {
+                const p = reg.data_batismo.split('/');
+                if(p.length === 3) document.getElementById('ebData').value = `${p[2]}-${p[1]}-${p[0]}`;
+            } else { document.getElementById('ebData').value = ''; }
+            
+            document.getElementById('modalEditBatismo').style.display = 'flex';
+        }
+
+        async function atualizarBatismo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnUpdateBatismo');
+            const status = document.getElementById('ebStatus').value;
+            const nome = document.getElementById('ebNome').value;
+            const dataBatismoInput = document.getElementById('ebData').value;
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ATUALIZANDO...';
+            btn.disabled = true;
+
+            const payload = {
+                action: 'saveBaptism', 
+                nome: nome,
+                telefone: document.getElementById('ebTel').value,
+                loja: document.getElementById('ebLoja').value,
+                status: status,
+                dataBatismo: dataBatismoInput ? dataBatismoInput.split('-').reverse().join('/') : ""
+            };
+
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                // Disparo de WhatsApp se estiver agendado
+                if(status === 'Batismo Agendado') {
+                    const msg = `Olá *${nome.split(' ')[0]}*! 👋 Confirmamos o seu *BATISMO*! 🌊%0A🗓️ Data: *${payload.dataBatismo}*%0A📍 Local: *${payload.loja}*`;
+                    window.open(`https://api.whatsapp.com/send?phone=55${payload.telefone.replace(/\D/g,'')}&text=${msg}`, '_blank');
+                }
+                
+                alert("Status de Batismo atualizado com sucesso!");
+                document.getElementById('modalEditBatismo').style.display = 'none';
+                carregarBatismos(true); 
+            } catch(e) { 
+                alert("Erro ao atualizar status na planilha."); 
+            } finally { 
+                btn.innerHTML = 'ATUALIZAR CANDIDATO'; 
+                btn.disabled = false; 
+            }
+        }
+
+        async function salvarNovoBatismo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvarBatismo');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ 
+                    action: 'saveBaptism', 
+                    nome: document.getElementById('nbNome').value, 
+                    telefone: document.getElementById('nbTel').value, 
+                    loja: document.getElementById('nbLoja').value 
+                }), mode: 'no-cors' });
+                alert("Candidato Cadastrado!"); document.getElementById('modalNovoBatismo').style.display='none'; carregarBatismos();
+            } catch(e) { alert("Erro."); }
+            finally { btn.innerHTML = 'CADASTRAR CANDIDATO'; btn.disabled = false; }
+        }
+
+        function gerarPDFBatismo() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE BATISMO", 15, 15);
+            doc.autoTable({ 
+                head: [["NOME", "TELEFONE", "DATA BATISMO", "STATUS"]], 
+                body: filteredBatismo.map(i => [i.nome_candidato, i.telefone, i.data_batismo || '-', i.status]), 
+                startY: 25, 
+                theme: 'grid' 
+            });
+            doc.save(`Batismo_Relatorio.pdf`);
+        }
     </script>
 </body>
 </html>
