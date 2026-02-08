@@ -402,6 +402,17 @@
         }
 
         // --- Funções Originais Mantidas ---
+        
+        
+            async function gerarRelatorioPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const mesNome = document.getElementById('fMes').options[document.getElementById('fMes').selectedIndex].text;
+            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE CANDIDATOS", 15, 15);
+            doc.setFontSize(10); doc.text(`Filtro: ${mesNome} / ${document.getElementById('fAno').value}`, 15, 22);
+            doc.autoTable({ head: [["NOME", "TELEFONE", "BATIZADO?", "STATUS"]], body: filteredCache.map(i => [i.nome, i.telefone, i.batizado, i.status]), startY: 30, theme: 'grid' });
+            doc.save(`Relatorio_DINC_${mesNome}.pdf`);
+        }
 
         function openAnalyzeModal(nome) {
             const reg = dbCache.find(i => i.nome === nome);
@@ -447,8 +458,8 @@
             } catch(e) { alert("Erro de conexão."); }
             finally { btn.innerHTML = 'ATUALIZAR DADOS'; btn.disabled = false; }
         }
-        
-            function enviarWppBatismo() {
+
+        function enviarWppBatismo() {
             const nome = document.getElementById('modalNome').innerText;
             const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
             const msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${document.getElementById('editHoraBatismo').value}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
@@ -475,7 +486,7 @@
                         <div><p class="font-black text-blue-900 uppercase italic leading-tight">${u.nome}</p><p class="text-[10px] text-slate-400 font-black tracking-widest uppercase">${u.email}</p></div>
                         <div class="flex justify-between items-center mt-6 pt-4 border-t">
                             <span class="text-[8px] font-black bg-blue-50 text-blue-800 px-3 py-1 rounded-full uppercase tracking-widest">${u.nivel}</span>
-                            <button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase hover:underline">Trocar Status</button>
+                            <button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase hover:underline">Inativar/Ativar</button>
                         </div>
                     </div>`).join('');
             } catch(e) { div.innerHTML = "Erro ao listar equipe."; }
@@ -490,6 +501,14 @@
                 alert("Colaborador Cadastrado!"); document.getElementById('modalUser').style.display='none'; carregarUsuarios();
             } catch(e) { alert("Erro."); }
             finally { btn.innerHTML = 'CRIAR ACESSO'; btn.disabled = false; }
+        }
+        
+            async function toggleUserStatus(email, status) {
+            if(!confirm("Deseja mudar o status de acesso?")) return;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'manageUser', subAction: 'status', email: email, newStatus: status }), mode: 'no-cors' });
+                carregarUsuarios();
+            } catch(e) { alert("Erro."); }
         }
 
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
