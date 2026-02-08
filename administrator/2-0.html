@@ -401,19 +401,6 @@
             } catch(e) { alert("Erro ao excluir."); }
         }
 
-        // --- Funções Originais Mantidas ---
-        
-        
-            async function gerarRelatorioPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const mesNome = document.getElementById('fMes').options[document.getElementById('fMes').selectedIndex].text;
-            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE CANDIDATOS", 15, 15);
-            doc.setFontSize(10); doc.text(`Filtro: ${mesNome} / ${document.getElementById('fAno').value}`, 15, 22);
-            doc.autoTable({ head: [["NOME", "TELEFONE", "BATIZADO?", "STATUS"]], body: filteredCache.map(i => [i.nome, i.telefone, i.batizado, i.status]), startY: 30, theme: 'grid' });
-            doc.save(`Relatorio_DINC_${mesNome}.pdf`);
-        }
-
         function openAnalyzeModal(nome) {
             const reg = dbCache.find(i => i.nome === nome);
             if(!reg) return;
@@ -441,36 +428,57 @@
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            
+            const novoStatus = document.getElementById('editStatus').value;
 
             const payload = {
                 action: 'update', nome: document.getElementById('editNome').value,
                 nascimento: document.getElementById('editDN').value.split('-').reverse().join('/'),
-                status: document.getElementById('editStatus').value, 
+                status: novoStatus, 
                 dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
                 lider: document.getElementById('editLider').value, obs: document.getElementById('editObs').value
             };
 
             try {
+                // Fetch com no-cors para evitar erro de redirecionamento do Google Apps Script
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                // Dispara o WhatsApp baseado no status antes de fechar e recarregar
                 if(novoStatus === 'Batismo Agendado') enviarWppBatismo();
                 else if(novoStatus === 'Integração Presidencial') enviarWppIntegração();
-                alert("Registro Sincronizado!"); closeModal(); carregarDados(true);
-            } catch(e) { alert("Erro de conexão."); }
-            finally { btn.innerHTML = 'ATUALIZAR DADOS'; btn.disabled = false; }
+                
+                alert("Registro Sincronizado!"); 
+                closeModal(); 
+                carregarDados(true);
+            } catch(e) { 
+                console.error(e);
+                alert("Erro ao processar atualização."); 
+            } finally { 
+                btn.innerHTML = 'ATUALIZAR DADOS'; 
+                btn.disabled = false; 
+            }
         }
 
         function enviarWppBatismo() {
             const nome = document.getElementById('modalNome').innerText;
-            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
-            const msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${document.getElementById('editHoraBatismo').value}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
-            window.open(`https://api.whatsapp.com/send?phone=55${document.getElementById('editTel').value}&text=${msg}`, '_blank');
+            const dataInput = document.getElementById('editDataBatismo').value;
+            const data = dataInput ? dataInput.split('-').reverse().join('/') : '--/--/----';
+            const hora = document.getElementById('editHoraBatismo').value;
+            const tel = document.getElementById('editTel').value.replace(/\D/g,'');
+            
+            const msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
         }
 
         function enviarWppIntegração() {
             const nome = document.getElementById('modalNome').innerText;
-            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
-            const msg = `Olá *${nome.toUpperCase()}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${document.getElementById('editHoraBatismo').value}h*%0A%0ASua presença é fundamental!`;
-            window.open(`https://api.whatsapp.com/send?phone=55${document.getElementById('editTel').value}&text=${msg}`, '_blank');
+            const dataInput = document.getElementById('editDataBatismo').value;
+            const data = dataInput ? dataInput.split('-').reverse().join('/') : '--/--/----';
+            const hora = document.getElementById('editHoraBatismo').value;
+            const tel = document.getElementById('editTel').value.replace(/\D/g,'');
+
+            const msg = `Olá *${nome.toUpperCase()}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0ASua presença é fundamental!`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
         }
 
         async function carregarUsuarios() {
@@ -503,7 +511,7 @@
             finally { btn.innerHTML = 'CRIAR ACESSO'; btn.disabled = false; }
         }
         
-            async function toggleUserStatus(email, status) {
+        async function toggleUserStatus(email, status) {
             if(!confirm("Deseja mudar o status de acesso?")) return;
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'manageUser', subAction: 'status', email: email, newStatus: status }), mode: 'no-cors' });
