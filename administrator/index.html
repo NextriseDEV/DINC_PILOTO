@@ -7,19 +7,28 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s; z-index: 50; }
+        .sidebar.active { transform: translateX(0); }
+        .nav-item { padding: 1rem 1.5rem; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+        .nav-item:hover { background: #1e40af; }
+        .nav-item.active { background: #1e40af; border-left-color: #f47b20; font-weight: bold; }
         .content { margin-left: 250px; padding: 2rem; transition: margin-left 0.3s; }
+        
+        .card-crescimento { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #f47b20; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        
         @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .sidebar.active { transform: translateX(0); }
-            .content { margin-left: 0; padding-top: 5rem; padding-inline: 1rem; }
+            .sidebar { transform: translateX(-250px); }
+            .content { margin-left: 0; padding: 1rem; }
+            .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+            .hidden { display: none; }
             #mobile-header { display: flex !important; }
         }
-        .nav-item.active { background: #1e40af; border-left: 4px solid #fbbf24; }
         .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
         #mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 64px; background: #0d2d5a; color: white; z-index: 45; align-items: center; justify-content: space-between; padding-inline: 1rem; }
@@ -54,8 +63,10 @@
             <p class="text-[9px] text-blue-300 uppercase font-bold tracking-widest">Painel Master</p>
         </div>
         <nav class="flex-1 p-4 space-y-2">
-            <a href="#" onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active block p-3 rounded font-bold text-sm"><i class="fa-solid fa-users w-8"></i> Convertidos</a>
-            <a href="#" id="btnMenuUsers" onclick="switchView('users')" class="hidden block p-3 rounded text-gray-400 font-bold text-sm"><i class="fa-solid fa-user-shield w-8"></i> Equipe</a>
+            <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active rounded font-bold text-sm"><i class="fa-solid fa-users w-8"></i> Convertidos</div>
+            <div onclick="switchView('crescimento')" id="nav-crescimento" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-seedling w-8"></i> Crescimento</div>
+            <div onclick="switchView('batismo')" id="nav-batismo" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-water w-8"></i> Batismo</div>
+            <div id="btnMenuUsers" onclick="switchView('users')" class="nav-item hidden rounded font-bold text-sm"><i class="fa-solid fa-user-shield w-8"></i> Equipe</div>
             <button onclick="gerarRelatorioPDF()" class="w-full text-left p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-file-pdf w-8"></i> PDF Relatório</button>
         </nav>
         <div class="p-6 border-t border-blue-800 text-xs font-bold bg-blue-950/50">
@@ -67,7 +78,7 @@
     <div class="content">
         <div id="view-dashboard">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter uppercase font-black italic">Gestão de Almas</h2>
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
                 <div class="flex gap-2">
                     <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
                     <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option></select>
@@ -108,12 +119,88 @@
             </div>
         </div>
 
+            <div id="view-crescimento" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Crescimento do Reino</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Comparativo Anual: Barras (Mensal) / Linhas (Acumulado)</p>
+            </div>
+            <div class="card-crescimento bg-white p-6 h-[450px]">
+                <h3 class="font-black text-blue-900 uppercase italic mb-4">Acompanhamento de Almas por Período</h3>
+                <canvas id="crescimentoChart"></canvas>
+            </div>
+        </div>
+
+          <div id="view-batismo" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic">Gestão de Batismos</h2>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button onclick="gerarPDFBatismo()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
+                    <button onclick="document.getElementById('modalNovoBatismo').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-1 hover:bg-blue-700 transition shadow-lg tracking-widest">+ Novo Candidato</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
+                <input type="text" id="searchBatismo" placeholder="Buscar candidato ao batismo..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterBatismo()">
+                <button onclick="carregarBatismos(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-full md:w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
+                            <tr><th class="p-5">Candidato / Cadastro</th><th class="p-5">Congregação</th><th class="p-5">Data Batismo</th><th class="p-5">Status</th><th class="p-5 text-right">Ação</th></tr>
+                        </thead>
+                        <tbody id="table-batismo" class="text-xs divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalNovoBatismo" class="modal-analise">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-blue-500 m-4 text-center">
+                <h3 class="font-black text-blue-900 uppercase italic mb-6">Novo Candidato ao Batismo</h3>
+                <form onsubmit="salvarNovoBatismo(event)" class="space-y-4 text-left">
+                    <input id="nbNome" placeholder="NOME COMPLETO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
+                    <input id="nbTel" placeholder="TELEFONE (DDD + NÚMERO)" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold focus:ring-2 focus:ring-blue-900" required>
+                    <input id="nbLoja" placeholder="CONGREGAÇÃO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" value="ADSA BRASIL MATRIZ" required>
+                    <button type="submit" id="btnSalvarBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] font-black italic">CADASTRAR CANDIDATO</button>
+                </form>
+                <button onclick="document.getElementById('modalNovoBatismo').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
+            </div>
+        </div>
+
+        <div id="modalEditBatismo" class="modal-analise">
+            <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-blue-900">
+                <div class="bg-blue-900 p-8 text-white flex justify-between items-center relative">
+                    <div><h3 id="editBatNome" class="font-black text-xl uppercase italic">--</h3><p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest font-black italic">Gerenciar Batismo</p></div>
+                    <button onclick="document.getElementById('modalEditBatismo').style.display='none'" class="text-blue-300 hover:text-white p-2 transition-all"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+                <form id="formEditBatismo" class="p-8 space-y-4" onsubmit="atualizarBatismo(event)">
+                    <input type="hidden" id="ebNome">
+                    <input type="hidden" id="ebTel">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status do Batismo</label>
+                        <select id="ebStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
+                            <option value="Pendente de Agendamento">Pendente de Agendamento</option>
+                            <option value="Batismo Agendado">Batismo Agendado</option>
+                            <option value="Ausente">Ausente</option>
+                            <option value="Batismo Realizado">Batismo Realizado</option>
+                        </select>
+                    </div>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data Agendada</label><input type="date" id="ebData" class="w-full p-3 border rounded-xl outline-none font-bold text-xs"></div>
+                    <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Congregação</label><input type="text" id="ebLoja" class="w-full p-3 border rounded-xl outline-none font-bold text-xs uppercase"></div>
+                    
+                    <button type="submit" id="btnUpdateBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest font-black italic">ATUALIZAR CANDIDATO</button>
+                </form>
+            </div>
+        </div>
+
         <div id="view-users" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter uppercase font-black italic">Equipe DINC</h2>
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Equipe DINC</h2>
                 <div class="flex gap-2 w-full md:w-auto">
                     <select id="fUserStatus" onchange="carregarUsuarios()" class="p-2 border rounded-xl text-[10px] font-black uppercase bg-white"><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option><option value="Todos">Todos</option></select>
-                    <button onclick="document.getElementById('modalUser').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-1 hover:bg-blue-700 transition shadow-lg tracking-widest font-black italic">+ Novo Usuário</button>
+                    <button onclick="document.getElementById('modalUser').style.display='flex'" class="bg-blue-900 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase flex-1 hover:bg-blue-700 transition shadow-lg tracking-widest">+ Novo Usuário</button>
                 </div>
             </div>
             <div id="usersList" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
@@ -142,7 +229,10 @@
                     </select>
                 </div>
                 <div><label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Observações da Alma</label><textarea id="editObs" rows="3" class="w-full p-3 border rounded-xl resize-none outline-none font-medium text-xs uppercase transition-all" placeholder="ANOTAÇÕES DO LÍDER..."></textarea></div>
-                <button type="submit" id="btnSalvar" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest font-black italic">ATUALIZAR DADOS</button>
+                <div class="flex flex-col gap-2">
+                    <button type="submit" id="btnSalvar" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">ATUALIZAR DADOS</button>
+                    <button type="button" onclick="excluirRegistroAtual()" class="w-full bg-red-50 text-red-600 font-bold py-3 rounded-2xl border border-red-100 hover:bg-red-100 transition uppercase text-[9px] tracking-widest italic">EXCLUIR PERMANENTEMENTE</button>
+                </div>
             </form>
         </div>
     </div>
@@ -155,7 +245,7 @@
                 <input id="uEmail" placeholder="E-MAIL" type="email" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                 <input id="uSenha" placeholder="SENHA" type="password" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                 <select id="uNivel" class="w-full p-4 border rounded-2xl font-black bg-slate-50 outline-none text-xs uppercase"><option value="Padrao">Voluntário</option><option value="Coordenador">Coordenador</option></select>
-                <button type="submit" id="btnCriarUser" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] font-black italic">CRIAR ACESSO</button>
+                <button type="submit" id="btnCriarUser" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] italic">CRIAR ACESSO</button>
             </form>
             <button onclick="document.getElementById('modalUser').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
         </div>
@@ -168,6 +258,7 @@
         let currentUser = null;
         let currentPage = 1;
         const itemsPerPage = 10;
+        let growChart = null;
 
         async function realizarLogin(e) {
             e.preventDefault();
@@ -180,7 +271,7 @@
                     localStorage.setItem('dinc_v2_session', JSON.stringify(res.user));
                     iniciarSessao(res.user);
                 } else { document.getElementById('loginMsg').innerText = res.message; btn.innerHTML = 'ENTRAR'; }
-            } catch (err) { alert("Cérebro offline."); btn.innerHTML = 'ENTRAR'; }
+            } catch (err) { alert("Erro de conexão."); btn.innerHTML = 'ENTRAR'; }
         }
 
         function iniciarSessao(user) {
@@ -194,16 +285,21 @@
                 document.getElementById('btnMenuUsers').classList.remove('hidden');
             }
             carregarDados();
+            carregarBatismos()
         }
 
-        async function carregarDados(force = false) {
+            async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest"><i class="fa-solid fa-dna fa-spin mr-2"></i>Sincronizando Base...</td></tr>';
             try {
                 const res = await fetch(`${API_URL}?action=getDados`);
+                if (!res.ok) throw new Error("Erro na rede ou URL da API");
                 dbCache = await res.json();
                 filterTable();
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase tracking-widest animate-pulse italic">Aguardando API do Cérebro...</td></tr>'; }
+            } catch (e) { 
+                console.error("Erro DINC API:", e);
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Erro ao conectar: ' + e.message + '</td></tr>'; 
+            }
         }
 
         function filterTable() {
@@ -232,11 +328,21 @@
             renderTable();
         }
 
-        function atualizarKPIs() {
-            document.getElementById('stat-total').innerText = filteredCache.length;
-            document.getElementById('stat-aceitacao').innerText = filteredCache.filter(i => i.tipo === 'Aceitação').length;
-            document.getElementById('stat-reconciliacao').innerText = filteredCache.filter(i => i.tipo === 'Reconciliação').length;
-            document.getElementById('stat-batismo').innerText = filteredCache.filter(i => i.batizado === 'Não').length;
+            function atualizarKPIs() {
+            // Verifica se os elementos existem antes de tentar atualizar para evitar erros de "null"
+            const elTotal = document.getElementById('stat-total');
+            const elAceitacao = document.getElementById('stat-aceitacao');
+            const elReconciliacao = document.getElementById('stat-reconciliacao');
+            const elSemBatismo = document.getElementById('stat-batismo');
+            const elGrowDecisoes = document.getElementById('grow-decisoes');
+
+            if (elTotal) elTotal.innerText = filteredCache.length;
+            if (elAceitacao) elAceitacao.innerText = filteredCache.filter(i => i.tipo === 'Aceitação').length;
+            if (elReconciliacao) elReconciliacao.innerText = filteredCache.filter(i => i.tipo === 'Reconciliação').length;
+            if (elSemBatismo) elSemBatismo.innerText = filteredCache.filter(i => i.batizado === 'Não').length;
+            
+            // Aqui era onde gerava o erro. O ID correto no seu HTML é 'grow-decisoes'
+            if (elGrowDecisoes) elGrowDecisoes.innerText = filteredCache.length;
         }
 
         function renderTable() {
@@ -253,17 +359,14 @@
             tbody.innerHTML = paginated.map(item => {
                 const saudacao = `Olá *${item.nome.split(' ')[0]}*! Aqui é o(a) *${currentUser.nome.split(' ')[0]}* do DINC. Graça e Paz! 👋`;
                 const telLimpo = String(item.telefone || "").replace(/\D/g,'');
-                
-                // Formatação Normalizada (Data + Hora)
                 const dataLimpa = (item.data && item.data.includes(' ')) ? item.data.split(' ')[0] : (item.data || '');
-                const horaLimpa = item.hora || '';
-                const nascimentoLimpo = (item.nascimento && item.nascimento.includes(' ')) ? item.nascimento.split(' ')[0] : (item.nascimento || 'Data Nascimento Não informado');
+                const nascimentoLimpo = (item.nascimento && item.nascimento.includes(' ')) ? item.nascimento.split(' ')[0] : (item.nascimento || 'Não informado');
 
                 return `
                 <tr class="hover:bg-blue-50 transition border-b">
                     <td class="p-5">
                         <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase">${dataLimpa} ${horaLimpa} | ${nascimentoLimpo}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">${dataLimpa} | Nasc: ${nascimentoLimpo}</p>
                     </td>
                     <td class="p-5">
                         <span class="status-badge ${item.tipo === 'Aceitação' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">${item.tipo}</span>
@@ -288,19 +391,154 @@
             renderTable();
         }
 
-        async function gerarRelatorioPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const mesNome = document.getElementById('fMes').options[document.getElementById('fMes').selectedIndex].text;
-            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE CANDIDATOS", 15, 15);
-            doc.setFontSize(10); doc.text(`Filtro: ${mesNome} / ${document.getElementById('fAno').value}`, 15, 22);
-            doc.autoTable({ head: [["NOME", "TELEFONE", "BATIZADO?", "STATUS"]], body: filteredCache.map(i => [i.nome, i.telefone, i.batizado, i.status]), startY: 30, theme: 'grid' });
-            doc.save(`Relatorio_DINC_${mesNome}.pdf`);
+        function switchView(v) { 
+            document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard'); 
+            document.getElementById('view-users').classList.toggle('hidden', v !== 'users'); 
+            document.getElementById('view-batismo').classList.toggle('hidden', v !== 'batismo'); 
+            document.getElementById('view-crescimento').classList.toggle('hidden', v !== 'crescimento'); 
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+            if(v === 'users') { document.getElementById('btnMenuUsers').classList.add('active'); carregarUsuarios(); }
+            if(v === 'batismo') document.getElementById('nav-batismo').classList.add('active');
+            if(v === 'crescimento') { 
+                document.getElementById('nav-crescimento').classList.add('active');
+                initGrowChart(); 
+            }
+            if(window.innerWidth < 768) toggleMenu();
         }
+        
+        
+        let currentPeriod = 'ano';
+
+        function filterCrescimento(periodo) {
+            currentPeriod = periodo;
+            document.querySelectorAll('.btn-periodo').forEach(btn => {
+                btn.classList.remove('bg-blue-900', 'text-white');
+                if(btn.innerText.toLowerCase() === periodo) {
+                    btn.classList.add('bg-blue-900', 'text-white');
+                }
+            });
+            initGrowChart();
+        }
+
+   async function initGrowChart() {
+            const ano = document.getElementById('fAno').value;
+            const ctx = document.getElementById('crescimentoChart').getContext('2d');
+            if(growChart) growChart.destroy();
+
+            try {
+                const res = await fetch(`${API_URL}?action=getCrescimento&ano=${ano}`);
+                const result = await res.json();
+                const d = result.dados;
+
+                const labelsMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                
+                growChart = new Chart(ctx, {
+                    data: {
+                        labels: labelsMeses,
+                        datasets: [
+                            {
+                                type: 'bar',
+                                label: `Decisões ${result.anoAtual}`,
+                                data: d.atual,
+                                backgroundColor: '#f47b20',
+                                borderRadius: 5,
+                                order: 2
+                            },
+                            {
+                                type: 'line',
+                                label: `Acumulado ${result.anoAtual}`,
+                                data: d.atualAcum,
+                                borderColor: '#fdb913',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#fdb913',
+                                fill: false,
+                                tension: 0.4,
+                                order: 1
+                            },
+                            {
+                                type: 'bar',
+                                label: `Decisões ${result.anoAnterior}`,
+                                data: d.anterior,
+                                backgroundColor: '#0d2d5a',
+                                borderRadius: 5,
+                                order: 2
+                            },
+                            {
+                                type: 'line',
+                                label: `Acumulado ${result.anoAnterior}`,
+                                data: d.anteriorAcum,
+                                borderColor: '#94a3b8',
+                                borderDash: [5, 5],
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4,
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: 'bold', size: 10 } } },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                        }
+                    }
+                });
+            } catch(e) { console.error("Erro no gráfico:", e); }
+        }
+
+        async function salvarCandidatoBatismo(e) {
+            e.preventDefault();
+            const payload = {
+                action: 'saveBaptism',
+                nome: document.getElementById('bat-nome').value,
+                telefone: document.getElementById('bat-tel').value,
+                loja: document.getElementById('bat-loja').value
+            };
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                alert("Candidato cadastrado!");
+                document.getElementById('bat-nome').value = "";
+                carregarDados(true);
+            } catch(e) { alert("Erro ao salvar."); }
+        }
+
+      async function excluirRegistroAtual() {
+       const nome = document.getElementById('editNome').value;
+      const dataOriginal = document.getElementById('editNome').dataset.dataOriginal; // Captura a data salva
+
+      if(!confirm(`Deseja EXCLUIR permanentemente ${nome}? Esta ação não pode ser desfeita.`)) return;
+    
+      const payload = { 
+        action: 'delete', 
+        nome: nome, 
+        data: dataOriginal // Agora enviamos a data correta para o GS
+    };
+
+    try {
+        // Usamos POST comum. Como o GS não retorna CORS para POST, 
+        // tratamos o sucesso no bloco try
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+        
+        alert("Comando de exclusão enviado!");
+        closeModal();
+        carregarDados(true); // Recarrega a tabela
+    } catch(e) { 
+        alert("Erro ao excluir."); 
+    }
+}
 
         function openAnalyzeModal(nome) {
             const reg = dbCache.find(i => i.nome === nome);
             if(!reg) return;
+            document.getElementById('editNome').dataset.dataOriginal = reg.data;
             document.getElementById('modalNome').innerText = reg.nome;
             document.getElementById('editNome').value = reg.nome;
             document.getElementById('editTel').value = reg.telefone;
@@ -308,13 +546,13 @@
             document.getElementById('editStatus').value = reg.status || 'Pendente 1° Contato';
             document.getElementById('editObs').value = reg.observacoes || '';
             
-            // Corrige Data Nascimento para o input (preenche se houver)
-            if (reg.nascimento) {
-               const partes = reg.nascimento.split(' ')[0].split('/');
-               if(partes.length === 3) document.getElementById('editDN').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            // Correção da Data de Nascimento
+            if (reg.nascimento && reg.nascimento.includes('/')) {
+               const partes = reg.nascimento.split('/');
+               document.getElementById('editDN').value = `${partes[2]}-${partes[1]}-${partes[0]}`;
             } else { document.getElementById('editDN').value = ''; }
 
-            // Corrige Data Batismo
+            // Correção da Data de Batismo (Chave correta: data_batismo)
             if (reg.data_batismo && reg.data_batismo.includes('/')) {
                 const partesB = reg.data_batismo.split('/');
                 document.getElementById('editDataBatismo').value = `${partesB[2]}-${partesB[1]}-${partesB[0]}`;
@@ -326,37 +564,58 @@
         async function salvarEvolucao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvar');
-            const novoStatus = document.getElementById('editStatus').value;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            
+            const novoStatus = document.getElementById('editStatus').value;
 
             const payload = {
                 action: 'update', nome: document.getElementById('editNome').value,
                 nascimento: document.getElementById('editDN').value.split('-').reverse().join('/'),
-                status: novoStatus, dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
+                status: novoStatus, 
+                dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
                 lider: document.getElementById('editLider').value, obs: document.getElementById('editObs').value
             };
 
             try {
+                // Fetch com no-cors para evitar erro de redirecionamento do Google Apps Script
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                // Dispara o WhatsApp baseado no status antes de fechar e recarregar
                 if(novoStatus === 'Batismo Agendado') enviarWppBatismo();
                 else if(novoStatus === 'Integração Presidencial') enviarWppIntegração();
-                alert("Registro Sincronizado!"); closeModal(); carregarDados(true);
-            } catch(e) { alert("Erro de conexão."); }
-            finally { btn.innerHTML = 'ATUALIZAR DADOS'; btn.disabled = false; }
+                
+                alert("Registro Sincronizado!"); 
+                closeModal(); 
+                carregarDados(true);
+            } catch(e) { 
+                console.error(e);
+                alert("Erro ao processar atualização."); 
+            } finally { 
+                btn.innerHTML = 'ATUALIZAR DADOS'; 
+                btn.disabled = false; 
+            }
         }
 
         function enviarWppBatismo() {
             const nome = document.getElementById('modalNome').innerText;
-            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
-            const msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${document.getElementById('editHoraBatismo').value}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
-            window.open(`https://api.whatsapp.com/send?phone=55${document.getElementById('editTel').value}&text=${msg}`, '_blank');
+            const dataInput = document.getElementById('editDataBatismo').value;
+            const data = dataInput ? dataInput.split('-').reverse().join('/') : '--/--/----';
+            const hora = document.getElementById('editHoraBatismo').value;
+            const tel = document.getElementById('editTel').value.replace(/\D/g,'');
+            
+            const msg = `Olá *${nome.toUpperCase()}*! 👋 Confirmamos seu *BATISMO*!🌊%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0A⚠️ *ORIENTAÇÕES:*%0A- Chegar 30 min antes.%0A- Trazer roupa extra e toalha.%0A%0A📲 *APP EKLESIA (Cadastro p/ Certificado):*%0Ahttps://play.google.com/store/apps/details?id=app.portal.eklesia`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
         }
 
         function enviarWppIntegração() {
             const nome = document.getElementById('modalNome').innerText;
-            const data = document.getElementById('editDataBatismo').value.split('-').reverse().join('/');
-            const msg = `Olá *${nome.toUpperCase()}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${document.getElementById('editHoraBatismo').value}h*%0A%0ASua presença é fundamental!`;
-            window.open(`https://api.whatsapp.com/send?phone=55${document.getElementById('editTel').value}&text=${msg}`, '_blank');
+            const dataInput = document.getElementById('editDataBatismo').value;
+            const data = dataInput ? dataInput.split('-').reverse().join('/') : '--/--/----';
+            const hora = document.getElementById('editHoraBatismo').value;
+            const tel = document.getElementById('editTel').value.replace(/\D/g,'');
+
+            const msg = `Olá *${nome.toUpperCase()}*! 👋%0A%0AVocê foi convidado para uma Integração Especial com nosso *Pastor Presidente Marcos Galdino Jr.*%0A%0A🗓️ Data: *${data}*%0A⏰ Hora: *${hora}h*%0A%0ASua presença é fundamental!`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
         }
 
         async function carregarUsuarios() {
@@ -367,18 +626,14 @@
                 const res = await fetch(`${API_URL}?action=getUsers`);
                 let users = await res.json();
                 if(statusFiltro !== 'Todos') users = users.filter(u => u.status === statusFiltro);
-                div.innerHTML = users.map(u => {
-                    const isMaster = u.email.toLowerCase() === 'admin@dinc.org';
-                    return `
+                div.innerHTML = users.map(u => `
                     <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between transition-all hover:shadow-md">
                         <div><p class="font-black text-blue-900 uppercase italic leading-tight">${u.nome}</p><p class="text-[10px] text-slate-400 font-black tracking-widest uppercase">${u.email}</p></div>
                         <div class="flex justify-between items-center mt-6 pt-4 border-t">
                             <span class="text-[8px] font-black bg-blue-50 text-blue-800 px-3 py-1 rounded-full uppercase tracking-widest">${u.nivel}</span>
-                            ${isMaster ? '<span class="text-[8px] text-blue-900 font-black uppercase">Vitalício</span>' : 
-                            `<button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase hover:underline transition-all">Trocar Status</button>`}
+                            <button onclick="toggleUserStatus('${u.email}', '${u.status === 'Ativo' ? 'Inativo' : 'Ativo'}')" class="text-[9px] font-black ${u.status === 'Ativo' ? 'text-red-500' : 'text-green-500'} uppercase hover:underline">Inativar/Ativar</button>
                         </div>
-                    </div>`;
-                }).join('');
+                    </div>`).join('');
             } catch(e) { div.innerHTML = "Erro ao listar equipe."; }
         }
 
@@ -389,10 +644,10 @@
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'manageUser', subAction: 'create', nome: document.getElementById('uNome').value, email: document.getElementById('uEmail').value, senha: document.getElementById('uSenha').value, nivel: document.getElementById('uNivel').value }), mode: 'no-cors' });
                 alert("Colaborador Cadastrado!"); document.getElementById('modalUser').style.display='none'; carregarUsuarios();
-            } catch(e) { alert("Erro de conexão."); }
+            } catch(e) { alert("Erro."); }
             finally { btn.innerHTML = 'CRIAR ACESSO'; btn.disabled = false; }
         }
-
+        
         async function toggleUserStatus(email, status) {
             if(!confirm("Deseja mudar o status de acesso?")) return;
             try {
@@ -404,15 +659,169 @@
         function toggleMenu() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
         function closeModal() { document.getElementById('modalAnalyze').style.display = 'none'; }
         function logout() { localStorage.removeItem('dinc_v2_session'); location.reload(); }
-        function switchView(v) { 
-            document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard'); 
-            document.getElementById('view-users').classList.toggle('hidden', v !== 'users'); 
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
-            if(v === 'users') { document.getElementById('btnMenuUsers').classList.add('active'); carregarUsuarios(); }
-            if(window.innerWidth < 768 && document.getElementById('sidebar').classList.contains('active')) toggleMenu();
+        
+        window.onload = () => { 
+            const session = localStorage.getItem('dinc_v2_session'); 
+            if(session) iniciarSessao(JSON.parse(session)); 
+        };
+        
+        let batismoCache = [];
+        let filteredBatismo = [];
+
+        async function carregarBatismos(force = false) {
+            const tbody = document.getElementById('table-batismo');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest">Sincronizando Batismos...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}?action=getBatismos`);
+                batismoCache = await res.json();
+                filterBatismo();
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Falha ao conectar aos Batismos.</td></tr>'; }
         }
-        window.onload = () => { const session = localStorage.getItem('dinc_v2_session'); if(session) iniciarSessao(JSON.parse(session)); };
+
+        function filterBatismo() {
+            const busca = document.getElementById('searchBatismo').value.toLowerCase();
+            filteredBatismo = batismoCache.filter(i => 
+                String(i.nome_candidato || "").toLowerCase().includes(busca) || 
+                String(i.congregacao || "").toLowerCase().includes(busca)
+            );
+            renderTableBatismo();
+        }
+
+        function renderTableBatismo() {
+            const tbody = document.getElementById('table-batismo');
+            if(filteredBatismo.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
+                return;
+            }
+            tbody.innerHTML = filteredBatismo.map(item => {
+                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+                const msgWpp = `Olá *${item.nome_candidato.split(' ')[0]}*! 👋 Confirmamos seu *BATISMO*!🌊%0A🗓️ Data: *${item.data_batismo || 'A definir'}*%0A📍 Local: *${item.congregacao}*`;
+                
+                return `
+                <tr class="hover:bg-blue-50 transition border-b">
+                    <td class="p-5">
+                        <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro}</p>
+                    </td>
+                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px]">${item.congregacao}</td>
+                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px] italic">${item.data_batismo || '-'}</td>
+                    <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status}</td>
+                    <td class="p-5 text-right flex justify-end gap-2">
+                        <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${msgWpp}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></a>
+                        <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function gerarRelatorioPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); // Horizontal para caber mais colunas
+            doc.setFontSize(14); 
+            doc.text("DINC - RELATÓRIO GERAL DE CONVERTIDOS", 15, 15);
+            
+            const tableData = filteredCache.map(i => [
+                i.nome, 
+                i.tipo, 
+                i.status || 'Pendente', 
+                i.lider || '-', 
+                i.data_batismo || 'Não Agendado'
+            ]);
+
+            doc.autoTable({ 
+                head: [["NOME", "DECISÃO", "STATUS", "LÍDER RESP.", "DATA BATISMO"]], 
+                body: tableData, 
+                startY: 25, 
+                theme: 'grid',
+                headStyles: { fillColor: [13, 45, 90] }
+            });
+            doc.save(`Relatorio_DINC_Geral.pdf`);
+        }
+
+        function openEditBatismo(nome) {
+            const reg = batismoCache.find(i => i.nome_candidato === nome);
+            if(!reg) return;
+            document.getElementById('editBatNome').innerText = reg.nome_candidato;
+            document.getElementById('ebNome').value = reg.nome_candidato;
+            document.getElementById('ebTel').value = reg.telefone;
+            document.getElementById('ebLoja').value = reg.congregacao;
+            document.getElementById('ebStatus').value = reg.status;
+            
+            if (reg.data_batismo) {
+                const p = reg.data_batismo.split('/');
+                if(p.length === 3) document.getElementById('ebData').value = `${p[2]}-${p[1]}-${p[0]}`;
+            } else { document.getElementById('ebData').value = ''; }
+            
+            document.getElementById('modalEditBatismo').style.display = 'flex';
+        }
+
+        async function atualizarBatismo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnUpdateBatismo');
+            const status = document.getElementById('ebStatus').value;
+            const nome = document.getElementById('ebNome').value;
+            const dataBatismoInput = document.getElementById('ebData').value;
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ATUALIZANDO...';
+            btn.disabled = true;
+
+            const payload = {
+                action: 'saveBaptism', 
+                nome: nome,
+                telefone: document.getElementById('ebTel').value,
+                loja: document.getElementById('ebLoja').value,
+                status: status,
+                dataBatismo: dataBatismoInput ? dataBatismoInput.split('-').reverse().join('/') : ""
+            };
+
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                // Disparo de WhatsApp se estiver agendado
+                if(status === 'Batismo Agendado') {
+                    const msg = `Olá *${nome.split(' ')[0]}*! 👋 Confirmamos o seu *BATISMO*! 🌊%0A🗓️ Data: *${payload.dataBatismo}*%0A📍 Local: *${payload.loja}*`;
+                    window.open(`https://api.whatsapp.com/send?phone=55${payload.telefone.replace(/\D/g,'')}&text=${msg}`, '_blank');
+                }
+                
+                alert("Status de Batismo atualizado com sucesso!");
+                document.getElementById('modalEditBatismo').style.display = 'none';
+                carregarBatismos(true); 
+            } catch(e) { 
+                alert("Erro ao atualizar status na planilha."); 
+            } finally { 
+                btn.innerHTML = 'ATUALIZAR CANDIDATO'; 
+                btn.disabled = false; 
+            }
+        }
+
+        async function salvarNovoBatismo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvarBatismo');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ 
+                    action: 'saveBaptism', 
+                    nome: document.getElementById('nbNome').value, 
+                    telefone: document.getElementById('nbTel').value, 
+                    loja: document.getElementById('nbLoja').value 
+                }), mode: 'no-cors' });
+                alert("Candidato Cadastrado!"); document.getElementById('modalNovoBatismo').style.display='none'; carregarBatismos();
+            } catch(e) { alert("Erro."); }
+            finally { btn.innerHTML = 'CADASTRAR CANDIDATO'; btn.disabled = false; }
+        }
+
+        function gerarPDFBatismo() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE BATISMO", 15, 15);
+            doc.autoTable({ 
+                head: [["NOME", "TELEFONE", "DATA BATISMO", "STATUS"]], 
+                body: filteredBatismo.map(i => [i.nome_candidato, i.telefone, i.data_batismo || '-', i.status]), 
+                startY: 25, 
+                theme: 'grid' 
+            });
+            doc.save(`Batismo_Relatorio.pdf`);
+        }
     </script>
 </body>
 </html>
