@@ -119,11 +119,10 @@
             </div>
         </div>
 
-        <div id="view-crescimento" class="hidden">
-            <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter mb-8">Crescimento do Reino</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card-crescimento" style="border-top-color: #002e5d"><p class="text-xs font-black text-gray-500 uppercase">Novas Decisões (Mês)</p><p class="text-3xl font-bold text-blue-900" id="grow-decisoes">0</p></div>
-                <div class="card-crescimento"><p class="text-xs font-black text-gray-500 uppercase">Conversão Batismo</p><p class="text-3xl font-bold text-orange-500">0%</p></div>
+            <div id="view-crescimento" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Crescimento do Reino</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Comparativo Anual: Barras (Mensal) / Linhas (Acumulado)</p>
             </div>
             <div class="card-crescimento bg-white p-6 h-[450px]">
                 <h3 class="font-black text-blue-900 uppercase italic mb-4">Acompanhamento de Almas por Período</h3>
@@ -289,14 +288,18 @@
             carregarBatismos()
         }
 
-        async function carregarDados(force = false) {
+            async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest"><i class="fa-solid fa-dna fa-spin mr-2"></i>Sincronizando Base...</td></tr>';
             try {
                 const res = await fetch(`${API_URL}?action=getDados`);
+                if (!res.ok) throw new Error("Erro na rede ou URL da API");
                 dbCache = await res.json();
                 filterTable();
-            } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Aguardando API do Cérebro...</td></tr>'; }
+            } catch (e) { 
+                console.error("Erro DINC API:", e);
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Erro ao conectar: ' + e.message + '</td></tr>'; 
+            }
         }
 
         function filterTable() {
@@ -325,12 +328,21 @@
             renderTable();
         }
 
-        function atualizarKPIs() {
-            document.getElementById('stat-total').innerText = filteredCache.length;
-            document.getElementById('stat-aceitacao').innerText = filteredCache.filter(i => i.tipo === 'Aceitação').length;
-            document.getElementById('stat-reconciliacao').innerText = filteredCache.filter(i => i.tipo === 'Reconciliação').length;
-            document.getElementById('stat-batismo').innerText = filteredCache.filter(i => i.batizado === 'Não').length;
-            document.getElementById('grow-decisoes').innerText = filteredCache.length;
+            function atualizarKPIs() {
+            // Verifica se os elementos existem antes de tentar atualizar para evitar erros de "null"
+            const elTotal = document.getElementById('stat-total');
+            const elAceitacao = document.getElementById('stat-aceitacao');
+            const elReconciliacao = document.getElementById('stat-reconciliacao');
+            const elSemBatismo = document.getElementById('stat-batismo');
+            const elGrowDecisoes = document.getElementById('grow-decisoes');
+
+            if (elTotal) elTotal.innerText = filteredCache.length;
+            if (elAceitacao) elAceitacao.innerText = filteredCache.filter(i => i.tipo === 'Aceitação').length;
+            if (elReconciliacao) elReconciliacao.innerText = filteredCache.filter(i => i.tipo === 'Reconciliação').length;
+            if (elSemBatismo) elSemBatismo.innerText = filteredCache.filter(i => i.batizado === 'Não').length;
+            
+            // Aqui era onde gerava o erro. O ID correto no seu HTML é 'grow-decisoes'
+            if (elGrowDecisoes) elGrowDecisoes.innerText = filteredCache.length;
         }
 
         function renderTable() {
@@ -411,72 +423,58 @@
         }
 
    async function initGrowChart() {
-            const ano = document.getElementById('growAnoFiltro').value;
+            const ano = document.getElementById('fAno').value;
             const ctx = document.getElementById('crescimentoChart').getContext('2d');
             if(growChart) growChart.destroy();
 
             try {
                 const res = await fetch(`${API_URL}?action=getCrescimento&ano=${ano}`);
                 const result = await res.json();
-                const dados = result.dados;
+                const d = result.dados;
 
                 const labelsMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                let displayLabels = [...labelsMeses];
-                let dataAtual = [...dados.atual];
-                let dataAnterior = [...dados.anterior];
-
-                // Lógica de Agrupamento por Período
-                if (currentPeriod === 'trimestre') {
-                    displayLabels = ['1º Trim', '2º Trim', '3º Trim', '4º Trim'];
-                    dataAtual = [
-                        dataAtual.slice(0,3).reduce((a,b)=>a+b,0),
-                        dataAtual.slice(3,6).reduce((a,b)=>a+b,0),
-                        dataAtual.slice(6,9).reduce((a,b)=>a+b,0),
-                        dataAtual.slice(9,12).reduce((a,b)=>a+b,0)
-                    ];
-                    dataAnterior = [
-                        dataAnterior.slice(0,3).reduce((a,b)=>a+b,0),
-                        dataAnterior.slice(3,6).reduce((a,b)=>a+b,0),
-                        dataAnterior.slice(6,9).reduce((a,b)=>a+b,0),
-                        dataAnterior.slice(9,12).reduce((a,b)=>a+b,0)
-                    ];
-                } else if (currentPeriod === 'semestre') {
-                    displayLabels = ['1º Semestre', '2º Semestre'];
-                    dataAtual = [dataAtual.slice(0,6).reduce((a,b)=>a+b,0), dataAtual.slice(6,12).reduce((a,b)=>a+b,0)];
-                    dataAnterior = [dataAnterior.slice(0,6).reduce((a,b)=>a+b,0), dataAnterior.slice(6,12).reduce((a,b)=>a+b,0)];
-                } else if (currentPeriod === 'mes') {
-                    const mesAtual = new Date().getMonth();
-                    displayLabels = [labelsMeses[mesAtual]];
-                    dataAtual = [dataAtual[mesAtual]];
-                    dataAnterior = [dataAnterior[mesAtual]];
-                }
-
-                document.getElementById('grow-decisoes-periodo').innerText = dataAtual.reduce((a,b)=>a+b,0);
-
+                
                 growChart = new Chart(ctx, {
-                    type: 'line',
                     data: {
-                        labels: displayLabels,
+                        labels: labelsMeses,
                         datasets: [
                             {
-                                label: `Ano ${result.anoAtual}`,
-                                data: dataAtual,
-                                borderColor: '#f47b20',
+                                type: 'bar',
+                                label: `Decisões ${result.anoAtual}`,
+                                data: d.atual,
                                 backgroundColor: '#f47b20',
-                                tension: 0.4,
-                                borderWidth: 4,
-                                fill: false,
-                                pointRadius: 5
+                                borderRadius: 5,
+                                order: 2
                             },
                             {
-                                label: `Ano ${result.anoAnterior}`,
-                                data: dataAnterior,
-                                borderColor: '#002e5d',
-                                backgroundColor: '#002e5d',
+                                type: 'line',
+                                label: `Acumulado ${result.anoAtual}`,
+                                data: d.atualAcum,
+                                borderColor: '#fdb913',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#fdb913',
+                                fill: false,
                                 tension: 0.4,
-                                borderWidth: 2,
+                                order: 1
+                            },
+                            {
+                                type: 'bar',
+                                label: `Decisões ${result.anoAnterior}`,
+                                data: d.anterior,
+                                backgroundColor: '#0d2d5a',
+                                borderRadius: 5,
+                                order: 2
+                            },
+                            {
+                                type: 'line',
+                                label: `Acumulado ${result.anoAnterior}`,
+                                data: d.anteriorAcum,
+                                borderColor: '#94a3b8',
                                 borderDash: [5, 5],
-                                fill: false
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4,
+                                order: 1
                             }
                         ]
                     },
@@ -484,11 +482,12 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'bottom', labels: { font: { weight: 'bold' } } }
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: { weight: 'bold', size: 10 } } },
+                            tooltip: { mode: 'index', intersect: false }
                         },
                         scales: {
-                            y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-                            x: { grid: { display: false } }
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
                         }
                     }
                 });
