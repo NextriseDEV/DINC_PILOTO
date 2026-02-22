@@ -68,7 +68,9 @@
             <div onclick="switchView('batismo')" id="nav-batismo" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-water w-8"></i> Batismo</div>
             <div onclick="switchView('analise')" id="nav-analise" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-chart-line w-8"></i> Análise</div>
             <div id="btnMenuUsers" onclick="switchView('users')" class="nav-item hidden rounded font-bold text-sm"><i class="fa-solid fa-user-shield w-8"></i> Equipe</div>
-            <button onclick="gerarRelatorioPDF()" class="w-full text-left p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-file-pdf w-8"></i> PDF Relatório</button>     
+            <button onclick="gerarRelatorioPDF()" class="w-full text-left p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-file-pdf w-8"></i> PDF Relatório</button>
+      
+            
         </nav>
         <div class="p-6 border-t border-blue-800 text-xs font-bold bg-blue-950/50">
             <p id="userNameDisplay" class="text-yellow-500 uppercase truncate mb-2"></p>
@@ -849,6 +851,12 @@
             try {
                 const res = await fetch(`${API_URL}?action=getAnaliseData&ano=${ano}`);
                 const r = await res.json();
+                
+                if (!r || !r.dados) {
+                    console.error("Erro na estrutura do JSON:", r);
+                    return;
+                }
+                
                 const d = r.dados;
 
                 const ctx1 = document.getElementById('chartAnaliseConversao').getContext('2d');
@@ -857,11 +865,16 @@
                     data: {
                         labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
                         datasets: [
-                            { type: 'bar', label: 'Decisões', data: d.decisoesAtual, backgroundColor: '#0d2d5a', borderRadius: 5 },
-                            { type: 'line', label: 'Batismos Realizados', data: d.batismosAtual, borderColor: '#f47b20', borderWidth: 3, tension: 0.4, fill: false }
+                            { type: 'bar', label: 'Novas Decisões', data: d.decisoesAtual, backgroundColor: '#0d2d5a', borderRadius: 5, order: 2 },
+                            { type: 'line', label: 'Batismos Concluídos', data: d.batismosAtual, borderColor: '#f47b20', borderWidth: 3, pointBackgroundColor: '#f47b20', tension: 0.4, fill: false, order: 1 }
                         ]
                     },
-                    options: { responsive: true, maintainAspectRatio: false }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { font: { weight: 'bold' } } } },
+                        scales: { y: { beginAtZero: true, grid: { display: true } } }
+                    }
                 });
 
                 const ctx2 = document.getElementById('chartAnalisePizza').getContext('2d');
@@ -872,12 +885,23 @@
                         labels: ['Manhã', 'Noite', 'Aceitação', 'Reconciliação'],
                         datasets: [{
                             data: [d.periodos.manha, d.periodos.noite, d.periodos.aceitacao, d.periodos.reconciliacao],
-                            backgroundColor: ['#60a5fa', '#1e3a8a', '#10b981', '#f59e0b']
+                            backgroundColor: ['#60a5fa', '#1e3a8a', '#10b981', '#f59e0b'],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { position: 'right', labels: { boxWidth: 15, font: { size: 11, weight: 'bold' } } } 
+                        },
+                        cutout: '60%'
+                    }
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error("Falha fatal no carregamento da Análise:", e);
+            }
         }
     </script>
 </body>
