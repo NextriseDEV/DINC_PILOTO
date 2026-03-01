@@ -29,14 +29,21 @@
             .hidden { display: none; }
             #mobile-header { display: flex !important; }
         }
-        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        /* Referência: Estilos de Status e Feedback */
         .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         #mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 64px; background: #0d2d5a; color: white; z-index: 45; align-items: center; justify-content: space-between; padding-inline: 1rem; }
+        /* Modal de Feedback Padrão Ouro - NOVO */
+        .feedback-toast { position: fixed; bottom: 20px; right: 20px; padding: 1rem 2rem; border-radius: 1rem; color: white; font-weight: bold; z-index: 200; transform: translateY(100px); transition: 0.3s; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .feedback-toast.show { transform: translateY(0); }
+        .bg-success { background: #10b981; }
+        .bg-error { background: #ef4444; }
     </style>
 </head>
 <body>
 
     <div id="sidebar-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/50 z-[45] hidden no-print"></div>
+    
 
     <div id="login-screen" class="fixed inset-0 z-[110] bg-[#0d2d5a] flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm text-center">
@@ -66,6 +73,7 @@
             <div onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active rounded font-bold text-sm"><i class="fa-solid fa-users w-8"></i> Convertidos</div>
             <div onclick="switchView('crescimento')" id="nav-crescimento" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-seedling w-8"></i> Crescimento</div>
             <div onclick="switchView('batismo')" id="nav-batismo" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-water w-8"></i> Batismo</div>
+            <div onclick="switchView('integracao')" id="nav-integracao" class="nav-item rounded font-bold text-sm"><i class="fa-solid fa-handshake-angle w-8"></i> Integração</div>
             <div id="btnMenuUsers" onclick="switchView('users')" class="nav-item hidden rounded font-bold text-sm"><i class="fa-solid fa-user-shield w-8"></i> Equipe</div>
             <button onclick="gerarRelatorioPDF()" class="w-full text-left p-3 rounded text-gray-400 font-bold text-sm hover:bg-blue-800 transition-all"><i class="fa-solid fa-file-pdf w-8"></i> PDF Relatório</button>
         </nav>
@@ -152,6 +160,33 @@
                         </thead>
                         <tbody id="table-batismo" class="text-xs divide-y"></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+        <div id="view-integracao" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                <button onclick="gerarPDFIntegracao()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
+                <input type="text" id="searchIntegracao" placeholder="Busca inteligente na integração..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterIntegracao()">
+                <button onclick="carregarIntegracoes(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border-b">
+                            <tr><th class="p-5">Candidato / Cadastro</th><th class="p-5">Status</th><th class="p-5">Data Agendada</th><th class="p-5 text-right">Ação</th></tr>
+                        </thead>
+                        <tbody id="table-integracao" class="text-xs divide-y"></tbody>
+                    </table>
+                </div>
+                <div class="p-4 bg-slate-50 border-t flex justify-between items-center no-print">
+                    <button onclick="changePageIntegracao(-1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg">Anterior</button>
+                    <span id="pageInfoIntegracao" class="text-[10px] font-bold text-slate-400">Página 1</span>
+                    <button onclick="changePageIntegracao(1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg">Próxima</button>
                 </div>
             </div>
         </div>
@@ -259,6 +294,10 @@
         let currentPage = 1;
         const itemsPerPage = 10;
         let growChart = null;
+        let integracaoCache = [];
+        let filteredIntegracao = [];
+        let currentPageIntegracao = 1;
+        const itemsPerPageIntegracao = 10;
 
         async function realizarLogin(e) {
             e.preventDefault();
@@ -274,20 +313,21 @@
             } catch (err) { alert("Erro de conexão."); btn.innerHTML = 'ENTRAR'; }
         }
 
-        function iniciarSessao(user) {
+            function iniciarSessao(user) {
             currentUser = user;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('userNameDisplay').innerText = `OPERADOR: ${user.nome.toUpperCase()}`;
             document.getElementById('mobInit').innerText = user.nome.charAt(0).toUpperCase();
             
             const nivel = String(user.nivel || "").toUpperCase();
+            // Garante que o botão "Equipe" apareça para Master ou Coordenador
             if(nivel === 'MASTER' || nivel === 'COORDENADOR' || user.email.toLowerCase() === 'admin@dinc.org') {
-                document.getElementById('btnMenuUsers').classList.remove('hidden');
+                const btnUsers = document.getElementById('btnMenuUsers');
+                if(btnUsers) btnUsers.classList.remove('hidden');
             }
             carregarDados();
-            carregarBatismos()
+            carregarBatismos();
         }
-
             async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest"><i class="fa-solid fa-dna fa-spin mr-2"></i>Sincronizando Base...</td></tr>';
@@ -392,24 +432,87 @@
         }
 
         function switchView(v) { 
+            // Controla visibilidade das telas
             document.getElementById('view-dashboard').classList.toggle('hidden', v !== 'dashboard'); 
             document.getElementById('view-users').classList.toggle('hidden', v !== 'users'); 
             document.getElementById('view-batismo').classList.toggle('hidden', v !== 'batismo'); 
-            document.getElementById('view-crescimento').classList.toggle('hidden', v !== 'crescimento'); 
+            document.getElementById('view-integracao').classList.toggle('hidden', v !== 'integracao'); 
+            document.getElementById('view-crescimento').classList.toggle('hidden', v !== 'crescimento');
             
+            // Gerencia estado ativo do menu
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
             if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
-            if(v === 'users') { document.getElementById('btnMenuUsers').classList.add('active'); carregarUsuarios(); }
+            if(v === 'crescimento') {
+              document.getElementById('nav-crescimento').classList.add('active');
+              initGrowChart(); // CORREÇÃO: Chama o gráfico de crescimento
+            }
+            
             if(v === 'batismo') document.getElementById('nav-batismo').classList.add('active');
-            if(v === 'crescimento') { 
-                document.getElementById('nav-crescimento').classList.add('active');
-                initGrowChart(); 
+            if(v === 'integracao') {document.getElementById('nav-integracao').classList.add('active');carregarIntegracoes();
+            if(v === 'users') {
+              document.getElementById('btnMenuUsers').classList.add('active');
+              carregarUsuarios(); // CORREÇÃO: Chama a lista de equipe
+            }
+            
             }
             if(window.innerWidth < 768) toggleMenu();
         }
         
         
         let currentPeriod = 'ano';
+
+        // --- FUNÇÕES DE SUPORTE INTEGRAÇÃO ---
+
+        function showFeedback(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `feedback-toast bg-${type === 'success' ? 'success' : 'error'}`;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function renderTableIntegracao() {
+            const tbody = document.getElementById('table-integracao');
+            const start = (currentPageIntegracao - 1) * itemsPerPageIntegracao;
+            const end = start + itemsPerPageIntegracao;
+            const paginated = filteredIntegracao.slice(start, end);
+
+            if(paginated.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum registro na aba Integrações</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = paginated.map(item => {
+                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+                return `
+                <tr class="hover:bg-blue-50 transition border-b">
+                    <td class="p-5">
+                        <p class="font-black text-slate-800 uppercase leading-tight">${item.nome}</p>
+                        <p class="text-[9px] font-bold text-slate-400">CADASTRO: ${item.data_cadastro}</p>
+                    </td>
+                    <td class="p-5"><span class="status-badge bg-blue-100 text-blue-800">${item.status || 'Pendente'}</span></td>
+                    <td class="p-5 font-bold text-slate-500">${item.data_agendada || 'A definir'}</td>
+                    <td class="p-5 text-right flex justify-end gap-2">
+                        <button onclick="enviarWppIntegracaoPadrao('${item.nome}', '${telLimpo}', '${item.data_agendada}')" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></button>
+                        <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            const totalPages = Math.ceil(filteredIntegracao.length / itemsPerPageIntegracao) || 1;
+            document.getElementById('pageInfoIntegracao').innerText = `Página ${currentPageIntegracao} de ${totalPages}`;
+        }
+
+        function enviarWppIntegracaoPadrao(nome, tel, data) {
+            const primeiroNome = nome.split(' ')[0];
+            const msg = `Olá *${primeiroNome}*! 👋 Sua integração será dia *${data}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Deus abençoe!`;
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+        }
 
         function filterCrescimento(periodo) {
             currentPeriod = periodo;
@@ -422,7 +525,7 @@
             initGrowChart();
         }
 
-   async function initGrowChart() {
+            async function initGrowChart() {
             const ano = document.getElementById('fAno').value;
             const ctx = document.getElementById('crescimentoChart').getContext('2d');
             if(growChart) growChart.destroy();
@@ -792,6 +895,34 @@
                 btn.innerHTML = 'ATUALIZAR CANDIDATO'; 
                 btn.disabled = false; 
             }
+        }
+        
+        async function carregarIntegracoes(force = false) {
+            const tbody = document.getElementById('table-integracao');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest">Acessando Base de Integração...</td></tr>';
+            try {
+                const res = await fetch(`${API_URL}?action=getIntegracoes`);
+                integracaoCache = await res.json();
+                filterIntegracao();
+            } catch (e) { 
+                tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500 font-black italic uppercase">Erro ao carregar aba Integrações.</td></tr>'; 
+            }
+        }
+        
+        function changePageIntegracao(dir) {
+            const max = Math.ceil(filteredIntegracao.length / itemsPerPageIntegracao);
+            currentPageIntegracao = Math.min(Math.max(1, currentPageIntegracao + dir), max);
+            renderTableIntegracao();
+        }
+        
+        function filterIntegracao() {
+            const busca = document.getElementById('searchIntegracao').value.toLowerCase();
+            filteredIntegracao = integracaoCache.filter(i => 
+                String(i.nome || "").toLowerCase().includes(busca) || 
+                String(i.status || "").toLowerCase().includes(busca)
+            );
+            currentPageIntegracao = 1;
+            renderTableIntegracao();
         }
 
         async function salvarNovoBatismo(e) {
