@@ -1107,27 +1107,22 @@ async function dispararExclusaoOtimista() {
             document.getElementById('modalGerirIntegracao').style.display = 'flex';
         }
 
-       async function salvarMudancaIntegracao(e) {
+        async function salvarMudancaIntegracao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarInt');
-            const nomeCandidato = document.getElementById('intEditNome').value;
+            const nome = document.getElementById('intEditNome').value;
             const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
             const status = document.getElementById('intEditStatus').value;
             const dataRaw = document.getElementById('intEditData').value;
             const dataFormatada = dataRaw.split('-').reverse().join('/');
 
-            // Pega o primeiro nome do usuário logado (armazenado no localStorage no login)
-            const usuarioLogado = JSON.parse(localStorage.getItem('userDinc')) || { nome: "Secretaria" };
-            const nomeRemetente = usuarioLogado.nome.split(' ')[0];
-
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
 
             const payload = {
                 action: 'updateIntegracao',
-                nome: nomeCandidato,
+                nome: nome,
                 status: status,
-                dataAgendada: dataFormatada,
-                lider: nomeRemetente // Opcional: salva quem agendou
+                dataAgendada: dataFormatada
             };
 
             try {
@@ -1136,16 +1131,8 @@ async function dispararExclusaoOtimista() {
                 showFeedback("Integração Atualizada!");
                 document.getElementById('modalGerirIntegracao').style.display = 'none';
                 
-                // --- NOVA MENSAGEM PADRÃO OURO ---
-                const saudacao = "A Paz do Senhor Jesus";
-                const primeiroNomeCandidato = nomeCandidato.split(' ')[0].toUpperCase();
-                
-                const msg = `${saudacao} *${primeiroNomeCandidato}*! 👋\n\n` +
-                            `Aqui é o *${nomeRemetente}* da *ADSA Brasil*.\n\n` +
-                            `Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz.\n\n` +
-                            `📍 *Endereço:* https://share.google/eWDtXCXBdV2gOunH8\n\n` +
-                            `Sua presença é muito importante para nós! Deus abençoe.`;
-
+                // DISPARO AUTOMÁTICO DO WHATSAPP
+                const msg = `Olá *${nome.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Sua presença é muito importante!`;
                 window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
                 
                 carregarIntegracoes(true);
