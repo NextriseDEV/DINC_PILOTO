@@ -545,6 +545,7 @@
                     <td class="p-5"><span class="status-badge bg-blue-100 text-blue-800">${item.status || 'Pendente'}</span></td>
                     <td class="p-5 font-bold text-slate-500">${item.data_agendada || 'A definir'}</td>
                     <td class="p-5 text-right flex justify-end gap-2">
+                        <button onclick="confirmarExclusaoIntegracao('${item.nome}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
                         <button onclick="enviarWppIntegracaoPadrao('${item.nome}', '${telLimpo}', '${item.data_agendada}')" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></button>
                         <button onclick="openModalIntegracao('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
                     </td>
@@ -570,6 +571,45 @@
                 }
             });
             initGrowChart();
+        }
+        
+        
+        /**
+         * Lógica Otimista para Exclusão
+         */
+        async function confirmarExclusaoIntegracao(nome) {
+            // 1. DISPARA O FEEDBACK VISUAL IMEDIATO (INTERFACE OTIMISTA)
+            // Removemos o item do cache local antes mesmo do servidor responder
+            const backupCache = [...integracaoCache]; // Backup para caso de erro
+            integracaoCache = integracaoCache.filter(i => i.nome !== nome);
+            filteredIntegracao = filteredIntegracao.filter(i => i.nome !== nome);
+            
+            // Re-renderiza a tabela instantaneamente
+            renderTableIntegracao();
+            
+            // Notificação discreta de processamento (Opcional)
+            console.log("Excluindo em segundo plano...");
+
+            try {
+                // 2. TENTA EXCLUIR NO SERVIDOR
+                const response = await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'deleteIntegracao', nome: nome }),
+                    mode: 'no-cors' 
+                });
+
+                // Sucesso: Apenas confirma no log ou mostra um mini-toast
+                showFeedback("Registro excluído com sucesso!"); 
+                
+            } catch (error) {
+                // 3. REVERSÃO EM CASO DE ERRO (ROLLBACK)
+                integracaoCache = backupCache;
+                filteredIntegracao = backupCache;
+                renderTableIntegracao();
+                
+                // Modal de erro estilizado (Padrão DINC)
+                showFeedback("Erro ao excluir. O registro foi restaurado.", "error");
+            }
         }
 
             async function initGrowChart() {
