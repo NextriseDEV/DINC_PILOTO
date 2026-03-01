@@ -287,6 +287,37 @@
             </form>
         </div>
     </div>
+    <div id="modalGerirIntegracao" class="modal-analise">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-yellow-500">
+            <div class="bg-[#0d2d5a] p-8 text-white flex justify-between items-center">
+                <div>
+                    <h3 id="intModalNome" class="font-black text-xl uppercase italic">--</h3>
+                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest italic">Agendar Recepção 5º Andar</p>
+                </div>
+                <button onclick="document.getElementById('modalGerirIntegracao').style.display='none'" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+            </div>
+            <form class="p-8 space-y-4" onsubmit="salvarMudancaIntegracao(event)">
+                <input type="hidden" id="intEditNome">
+                <input type="hidden" id="intEditTel">
+                
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status da Integração</label>
+                    <select id="intEditStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
+                        <option value="Pendente de Agendamento">Pendente de Agendamento</option>
+                        <option value="Agendado">Agendado</option>
+                        <option value="Concluido">Concluído</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data da Integração</label>
+                    <input type="date" id="intEditData" class="w-full p-3 border rounded-xl outline-none font-bold text-xs" required>
+                </div>
+
+                <button type="submit" id="btnSalvarInt" class="w-full bg-[#0d2d5a] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">Confirmar e Abrir WhatsApp</button>
+            </form>
+        </div>
+    </div>
 
     <div id="modalUser" class="modal-analise">
         <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-yellow-500 m-4 text-center">
@@ -515,7 +546,7 @@
                     <td class="p-5 font-bold text-slate-500">${item.data_agendada || 'A definir'}</td>
                     <td class="p-5 text-right flex justify-end gap-2">
                         <button onclick="enviarWppIntegracaoPadrao('${item.nome}', '${telLimpo}', '${item.data_agendada}')" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></button>
-                        <button onclick="openAnalyzeModal('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
+                        <button onclick="openModalIntegracao('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -984,6 +1015,60 @@
                 theme: 'grid' 
             });
             doc.save(`Batismo_Relatorio.pdf`);
+        }
+        
+        function openModalIntegracao(nome) {
+            const reg = integracaoCache.find(i => i.nome === nome);
+            if(!reg) return;
+
+            document.getElementById('intModalNome').innerText = reg.nome;
+            document.getElementById('intEditNome').value = reg.nome;
+            document.getElementById('intEditTel').value = reg.telefone;
+            document.getElementById('intEditStatus').value = reg.status || "Pendente de Agendamento";
+            
+            // Tenta formatar data para o input date (yyyy-mm-dd)
+            if(reg.data_agendada && reg.data_agendada.includes('/')) {
+                const p = reg.data_agendada.split('/');
+                document.getElementById('intEditData').value = `${p[2]}-${p[1]}-${p[0]}`;
+            }
+
+            document.getElementById('modalGerirIntegracao').style.display = 'flex';
+        }
+
+        async function salvarMudancaIntegracao(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvarInt');
+            const nome = document.getElementById('intEditNome').value;
+            const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
+            const status = document.getElementById('intEditStatus').value;
+            const dataRaw = document.getElementById('intEditData').value;
+            const dataFormatada = dataRaw.split('-').reverse().join('/');
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
+
+            const payload = {
+                action: 'updateIntegracao',
+                nome: nome,
+                status: status,
+                dataAgendada: dataFormatada
+            };
+
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
+                showFeedback("Integração Atualizada!");
+                document.getElementById('modalGerirIntegracao').style.display = 'none';
+                
+                // DISPARO AUTOMÁTICO DO WHATSAPP
+                const msg = `Olá *${nome.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Sua presença é muito importante!`;
+                window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+                
+                carregarIntegracoes(true);
+            } catch(e) {
+                showFeedback("Erro ao salvar.", "error");
+            } finally {
+                btn.innerHTML = 'Confirmar e Abrir WhatsApp';
+            }
         }
     </script>
 </body>
