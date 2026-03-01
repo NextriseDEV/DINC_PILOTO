@@ -332,6 +332,23 @@
             <button onclick="document.getElementById('modalUser').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
         </div>
     </div>
+    
+    </div>
+
+    <div id="modalConfirmExclusao" class="modal-analise" style="display: none; background: rgba(13, 45, 90, 0.8);">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center border-t-8 border-red-500 m-4">
+            <div class="text-red-500 text-5xl mb-4">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-black text-xl text-slate-800 uppercase italic">Você tem certeza?</h3>
+            <p class="text-slate-500 text-sm mt-2 mb-8">Esta ação irá remover permanentemente <span id="nomeExcluirAlvo" class="font-black text-slate-800"></span> da lista de integração.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="btnConfirmarExcluir" class="w-full bg-red-500 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-red-600 transition uppercase text-[10px] tracking-widest italic">Sim, Excluir Agora</button>
+                <button onclick="fecharModalConfirmacao()" class="w-full bg-slate-100 text-slate-500 font-black py-4 rounded-2xl hover:bg-slate-200 transition uppercase text-[10px] tracking-widest">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwqjPBQMQ3x0yZNPjh1RqEeZH_Wc7F2-GpVpGVERGd6MyjssvyUiegRV8wWW9n48Szv/exec'; 
@@ -545,6 +562,7 @@
                     <td class="p-5"><span class="status-badge bg-blue-100 text-blue-800">${item.status || 'Pendente'}</span></td>
                     <td class="p-5 font-bold text-slate-500">${item.data_agendada || 'A definir'}</td>
                     <td class="p-5 text-right flex justify-end gap-2">
+                        <button onclick="confirmarExclusaoIntegracao('${item.nome}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
                         <button onclick="enviarWppIntegracaoPadrao('${item.nome}', '${telLimpo}', '${item.data_agendada}')" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></button>
                         <button onclick="openModalIntegracao('${item.nome}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
                     </td>
@@ -571,6 +589,60 @@
             });
             initGrowChart();
         }
+        
+        
+       let nomeParaExcluir = "";
+
+/**
+ * Abre o modal de confirmação antes de disparar a lógica otimista
+ */
+function confirmarExclusaoIntegracao(nome) {
+    nomeParaExcluir = nome;
+    document.getElementById('nomeExcluirAlvo').innerText = nome.toUpperCase();
+    document.getElementById('modalConfirmExclusao').style.display = 'flex';
+    
+    // Vincula o clique do botão de confirmação
+    document.getElementById('btnConfirmarExcluir').onclick = dispararExclusaoOtimista;
+}
+
+function fecharModalConfirmacao() {
+    document.getElementById('modalConfirmExclusao').style.display = 'none';
+    nomeParaExcluir = "";
+}
+
+/**
+ * Executa a exclusão com Padrão Optimistic UI
+ */
+async function dispararExclusaoOtimista() {
+    const nome = nomeParaExcluir;
+    fecharModalConfirmacao();
+
+    // 1. AÇÃO OTIMISTA: Remove da tela instantaneamente
+    const backupCache = [...integracaoCache];
+    integracaoCache = integracaoCache.filter(i => i.nome !== nome);
+    filteredIntegracao = filteredIntegracao.filter(i => i.nome !== nome);
+    renderTableIntegracao();
+
+    try {
+        // 2. TENTA EXCLUIR NO SERVIDOR (BACKEND)
+        // Usamos sendBeacon ou fetch normal conforme sua API_URL
+        await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'deleteIntegracao', nome: nome }),
+            mode: 'no-cors' 
+        });
+
+        // Sucesso silencioso ou um toast de confirmação
+        showFeedback("Registro removido!"); 
+
+    } catch (error) {
+        // 3. ROLLBACK: Se der erro, o nome volta para a lista
+        integracaoCache = backupCache;
+        filteredIntegracao = backupCache;
+        renderTableIntegracao();
+        showFeedback("Erro ao excluir. O registro foi restaurado.", "error");
+    }
+}
 
             async function initGrowChart() {
             const ano = document.getElementById('fAno').value;
@@ -1035,22 +1107,27 @@
             document.getElementById('modalGerirIntegracao').style.display = 'flex';
         }
 
-        async function salvarMudancaIntegracao(e) {
+       async function salvarMudancaIntegracao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarInt');
-            const nome = document.getElementById('intEditNome').value;
+            const nomeCandidato = document.getElementById('intEditNome').value;
             const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
             const status = document.getElementById('intEditStatus').value;
             const dataRaw = document.getElementById('intEditData').value;
             const dataFormatada = dataRaw.split('-').reverse().join('/');
 
+            // Pega o primeiro nome do usuário logado (armazenado no localStorage no login)
+            const usuarioLogado = JSON.parse(localStorage.getItem('userDinc')) || { nome: "Secretaria" };
+            const nomeRemetente = usuarioLogado.nome.split(' ')[0];
+
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
 
             const payload = {
                 action: 'updateIntegracao',
-                nome: nome,
+                nome: nomeCandidato,
                 status: status,
-                dataAgendada: dataFormatada
+                dataAgendada: dataFormatada,
+                lider: nomeRemetente // Opcional: salva quem agendou
             };
 
             try {
@@ -1059,8 +1136,16 @@
                 showFeedback("Integração Atualizada!");
                 document.getElementById('modalGerirIntegracao').style.display = 'none';
                 
-                // DISPARO AUTOMÁTICO DO WHATSAPP
-                const msg = `Olá *${nome.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Sua presença é muito importante!`;
+                // --- NOVA MENSAGEM PADRÃO OURO ---
+                const saudacao = "A Paz do Senhor Jesus";
+                const primeiroNomeCandidato = nomeCandidato.split(' ')[0].toUpperCase();
+                
+                const msg = `${saudacao} *${primeiroNomeCandidato}*! 👋\n\n` +
+                            `Aqui é o *${nomeRemetente}* da *ADSA Brasil*.\n\n` +
+                            `Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz.\n\n` +
+                            `📍 *Endereço:* https://share.google/eWDtXCXBdV2gOunH8\n\n` +
+                            `Sua presença é muito importante para nós! Deus abençoe.`;
+
                 window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
                 
                 carregarIntegracoes(true);
