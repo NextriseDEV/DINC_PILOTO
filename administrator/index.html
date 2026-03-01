@@ -1070,6 +1070,31 @@
                 btn.innerHTML = 'Confirmar e Abrir WhatsApp';
             }
         }
+        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO
+        function gerarPDFIntegracao() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(14);
+            doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
+            
+            // Mapeia os dados filtrados da aba integração
+            const data = filteredIntegracao.map(i => [
+                i.nome, 
+                i.telefone, 
+                i.status || 'Pendente', 
+                i.data_agendada || '-',
+                i.lider || '-'
+            ]);
+
+            doc.autoTable({ 
+                head: [['NOME', 'TELEFONE', 'STATUS', 'DATA AGENDADA', 'LÍDER']], 
+                body: data, 
+                startY: 25, 
+                theme: 'grid',
+                headStyles: { fillColor: [13, 45, 90] }
+            });
+            doc.save("Relatorio_Integracao_5Andar.pdf");
+        }
     </script>
 </body>
 </html>
