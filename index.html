@@ -97,7 +97,7 @@
     }
     function abrirWhatsapp(dados) {
       const tel = "55" + dados.telefone;
-      const msg = `Olá ${dados.nome.toUpperCase()}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0A1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`4️⃣ Horários de Culto: https://nextrisedev.github.io/DINC_PILOTO/administrator/m%C3%A9dia/horarios_cultos.jpeg%0A;
+      const msg = `Olá ${dados.nome.toUpperCase()}! Seja muito bem-vindo(a) à família de Deus! 🌟%0A%0A1️⃣ Boas-vindas: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0034.jpg%0A2️⃣ Nossa Arte: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/IMG-20260129-WA0035.jpg%0A3️⃣ Vídeo Especial: https://nextrisedev.github.io/DINC_PILOTO/administrator/média/VID-20260129-WA0033.mp4`;
       const url = `https://api.whatsapp.com/send?phone=${tel}&text=${msg}`;
       const win = window.open(url, '_blank');
       if (!win) window.location.href = url;
