@@ -371,7 +371,7 @@
                 const response = await fetch(`${API_URL}?action=login&email=${encodeURIComponent(document.getElementById('emailLogin').value)}&senha=${encodeURIComponent(document.getElementById('senhaLogin').value)}`);
                 const res = await response.json();
                 if (res.status === 'success') {
-                    localStorage.setItem('dinc_v2_session', JSON.stringify(res.user));
+                    localStorage.setItem('userDinc', JSON.stringify(userData));
                     iniciarSessao(res.user);
                 } else { document.getElementById('loginMsg').innerText = res.message; btn.innerHTML = 'ENTRAR'; }
             } catch (err) { alert("Erro de conexão."); btn.innerHTML = 'ENTRAR'; }
