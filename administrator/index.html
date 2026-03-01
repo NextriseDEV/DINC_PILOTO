@@ -151,6 +151,14 @@
                 <input type="text" id="searchBatismo" placeholder="Buscar candidato ao batismo..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterBatismo()">
                 <button onclick="carregarBatismos(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-full md:w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
             </div>
+            
+            <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
+                <div class="flex gap-2">
+                    <select id="fAnoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
+                    <select id="fMesBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
+                    <select id="fPeriodoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+                </div>
+            </div>
 
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto">
@@ -172,6 +180,14 @@
             <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
                 <input type="text" id="searchIntegracao" placeholder="Busca inteligente na integração..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterIntegracao()">
                 <button onclick="carregarIntegracoes(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
+                <div class="flex gap-2">
+                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
+                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
+                    <select id="fPeriodoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+                </div>
             </div>
 
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
@@ -313,20 +329,21 @@
             } catch (err) { alert("Erro de conexão."); btn.innerHTML = 'ENTRAR'; }
         }
 
-        function iniciarSessao(user) {
+            function iniciarSessao(user) {
             currentUser = user;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('userNameDisplay').innerText = `OPERADOR: ${user.nome.toUpperCase()}`;
             document.getElementById('mobInit').innerText = user.nome.charAt(0).toUpperCase();
             
             const nivel = String(user.nivel || "").toUpperCase();
+            // Garante que o botão "Equipe" apareça para Master ou Coordenador
             if(nivel === 'MASTER' || nivel === 'COORDENADOR' || user.email.toLowerCase() === 'admin@dinc.org') {
-                document.getElementById('btnMenuUsers').classList.remove('hidden');
+                const btnUsers = document.getElementById('btnMenuUsers');
+                if(btnUsers) btnUsers.classList.remove('hidden');
             }
             carregarDados();
-            carregarBatismos()
+            carregarBatismos();
         }
-
             async function carregarDados(force = false) {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center animate-pulse font-black text-blue-900 uppercase italic tracking-widest"><i class="fa-solid fa-dna fa-spin mr-2"></i>Sincronizando Base...</td></tr>';
@@ -436,12 +453,24 @@
             document.getElementById('view-users').classList.toggle('hidden', v !== 'users'); 
             document.getElementById('view-batismo').classList.toggle('hidden', v !== 'batismo'); 
             document.getElementById('view-integracao').classList.toggle('hidden', v !== 'integracao'); 
+            document.getElementById('view-crescimento').classList.toggle('hidden', v !== 'crescimento');
             
             // Gerencia estado ativo do menu
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
             if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+            if(v === 'crescimento') {
+              document.getElementById('nav-crescimento').classList.add('active');
+              initGrowChart(); // CORREÇÃO: Chama o gráfico de crescimento
+            }
+            
             if(v === 'batismo') document.getElementById('nav-batismo').classList.add('active');
             if(v === 'integracao') {document.getElementById('nav-integracao').classList.add('active');carregarIntegracoes();
+            if(v === 'users') {
+              document.getElementById('btnMenuUsers').classList.add('active');
+              carregarUsuarios(); // CORREÇÃO: Chama a lista de equipe
+            }
+            
             }
             if(window.innerWidth < 768) toggleMenu();
         }
@@ -768,15 +797,23 @@
             } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Falha ao conectar aos Batismos.</td></tr>'; }
         }
 
-        function filterBatismo() {
+     function filterBatismo() {
+            const ano = document.getElementById('fAnoBatismo').value;
+            const mes = document.getElementById('fMesBatismo').value;
+            const periodo = document.getElementById('fPeriodoBatismo').value;
             const busca = document.getElementById('searchBatismo').value.toLowerCase();
-            filteredBatismo = batismoCache.filter(i => 
-                String(i.nome_candidato || "").toLowerCase().includes(busca) || 
-                String(i.congregacao || "").toLowerCase().includes(busca)
-            );
+            
+            filteredBatismo = batismoCache.filter(i => {
+                const dataCad = String(i.data_cadastro || "");
+                const checkAno = dataCad.includes(ano);
+                const checkMes = mes === "" || dataCad.includes(mes);
+                const checkPeriodo = periodo === "" || String(i.periodo || "").toUpperCase() === periodo;
+                const checkBusca = busca === "" || String(i.nome_candidato || "").toLowerCase().includes(busca);
+                
+                return checkAno && checkMes && checkPeriodo && checkBusca;
+            });
             renderTableBatismo();
         }
-
         function renderTableBatismo() {
             const tbody = document.getElementById('table-batismo');
             if(filteredBatismo.length === 0) {
@@ -902,16 +939,24 @@
             renderTableIntegracao();
         }
         
-        function filterIntegracao() {
+    function filterIntegracao() {
+            const ano = document.getElementById('fAnoIntegracao').value;
+            const mes = document.getElementById('fMesIntegracao').value;
+            const periodo = document.getElementById('fPeriodoIntegracao').value;
             const busca = document.getElementById('searchIntegracao').value.toLowerCase();
-            filteredIntegracao = integracaoCache.filter(i => 
-                String(i.nome || "").toLowerCase().includes(busca) || 
-                String(i.status || "").toLowerCase().includes(busca)
-            );
+
+            filteredIntegracao = integracaoCache.filter(i => {
+                const dataCad = String(i.data_cadastro || "");
+                const checkAno = dataCad.includes(ano);
+                const checkMes = mes === "" || dataCad.includes(mes);
+                const checkPeriodo = periodo === "" || String(i.periodo || "").toUpperCase() === periodo;
+                const checkBusca = busca === "" || String(i.nome || "").toLowerCase().includes(busca);
+                
+                return checkAno && checkMes && checkPeriodo && checkBusca;
+            });
             currentPageIntegracao = 1;
             renderTableIntegracao();
         }
-
         async function salvarNovoBatismo(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarBatismo');
