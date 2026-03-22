@@ -214,6 +214,13 @@
                     <input id="nbNome" placeholder="NOME COMPLETO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                     <input id="nbTel" placeholder="TELEFONE (DDD + NÚMERO)" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold focus:ring-2 focus:ring-blue-900" required>
                     <input id="nbLoja" placeholder="CONGREGAÇÃO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" value="ADSA BRASIL MATRIZ" required>
+                    <div>
+                  <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Horário do Culto</label>
+                  <select id="nbPeriodo" class="w-full p-4 border rounded-2xl font-black bg-slate-50 outline-none text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                  <option value="MANHÃ">DOMINGO - MANHÃ</option>
+                  <option value="NOITE">DOMINGO - NOITE</option>
+                 </select>
+                  </div>
                     <button type="submit" id="btnSalvarBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] font-black italic">CADASTRAR CANDIDATO</button>
                 </form>
                 <button onclick="document.getElementById('modalNovoBatismo').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
@@ -793,7 +800,7 @@ async function dispararExclusaoOtimista() {
             const payload = {
                 action: 'update', nome: document.getElementById('editNome').value,
                 nascimento: document.getElementById('editDN').value.split('-').reverse().join('/'),
-                status: novoStatus, 
+                status: novoStatus, 
                 dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
                 lider: document.getElementById('editLider').value, obs: document.getElementById('editObs').value
             };
@@ -1069,7 +1076,8 @@ async function dispararExclusaoOtimista() {
                     action: 'saveBaptism', 
                     nome: document.getElementById('nbNome').value, 
                     telefone: document.getElementById('nbTel').value, 
-                    loja: document.getElementById('nbLoja').value 
+                    loja: document.getElementById('nbLoja').value,
+                    periodo: document.getElementById('nbPeriodo').value
                 }), mode: 'no-cors' });
                 alert("Candidato Cadastrado!"); document.getElementById('modalNovoBatismo').style.display='none'; carregarBatismos();
             } catch(e) { alert("Erro."); }
