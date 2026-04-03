@@ -169,8 +169,12 @@
                         <tbody id="table-batismo" class="text-xs divide-y"></tbody>
                     </table>
                 </div>
+                <div class="p-4 bg-slate-50 border-t flex justify-between items-center no-print">
+                    <button onclick="changePageBatismo(-1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Anterior</button>
+                    <span id="pageInfoBatismo" class="text-[10px] font-bold text-slate-400">Página 1 de 1</span>
+                    <button onclick="changePageBatismo(1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Próxima</button>
+                </div>
             </div>
-        </div>
         <div id="view-integracao" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
@@ -369,6 +373,8 @@
         let filteredIntegracao = [];
         let currentPageIntegracao = 1;
         const itemsPerPageIntegracao = 10;
+        let currentPageBatismo = 1; // Controle de página para batismo
+        const itemsPerPageBatismo = 10; // Limite de 10 por página
 
         async function realizarLogin(e) {
             e.preventDefault();
@@ -922,15 +928,25 @@ async function dispararExclusaoOtimista() {
                 
                 return checkAno && checkMes && checkPeriodo && checkBusca;
             });
+
+            currentPageBatismo = 1; // RESETA PARA PÁGINA 1 AO FILTRAR
             renderTableBatismo();
         }
-        function renderTableBatismo() {
+       function renderTableBatismo() {
             const tbody = document.getElementById('table-batismo');
-            if(filteredBatismo.length === 0) {
+            
+            // Lógica de corte para paginação
+            const start = (currentPageBatismo - 1) * itemsPerPageBatismo;
+            const end = start + itemsPerPageBatismo;
+            const paginated = filteredBatismo.slice(start, end);
+
+            if(paginated.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
+                document.getElementById('pageInfoBatismo').innerText = "Página 1 de 1";
                 return;
             }
-            tbody.innerHTML = filteredBatismo.map(item => {
+
+            tbody.innerHTML = paginated.map(item => {
                 const telLimpo = String(item.telefone || "").replace(/\D/g,'');
                 const msgWpp = `Olá *${item.nome_candidato.split(' ')[0]}*! 👋 Confirmamos seu *BATISMO*!🌊%0A🗓️ Data: *${item.data_batismo || 'A definir'}*%0A📍 Local: *${item.congregacao}*`;
                 
@@ -949,6 +965,17 @@ async function dispararExclusaoOtimista() {
                     </td>
                 </tr>`;
             }).join('');
+            
+          // Atualiza o contador de páginas
+            const totalPages = Math.ceil(filteredBatismo.length / itemsPerPageBatismo) || 1;
+            document.getElementById('pageInfoBatismo').innerText = `Página ${currentPageBatismo} de ${totalPages}`;
+        }
+        
+        // Função para trocar de página
+        function changePageBatismo(dir) {
+            const max = Math.ceil(filteredBatismo.length / itemsPerPageBatismo);
+            currentPageBatismo = Math.min(Math.max(1, currentPageBatismo + dir), max);
+            renderTableBatismo();
         }
         
         function gerarRelatorioPDF() {
@@ -1190,6 +1217,58 @@ try {
             });
             doc.save("Relatorio_Integracao_5Andar.pdf");
         }
+        
+      function confirmarExclusao(nome) {
+    const modalConfirm = document.createElement('div');
+    modalConfirm.id = 'modalConfirmExclusao';
+    modalConfirm.className = 'modal-analise flex items-center justify-center'; // Reutilizando classe CSS do projeto
+    modalConfirm.innerHTML = `
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-red-500 text-center">
+            <h3 class="font-black text-red-600 uppercase italic mb-4">CONFIRMAR EXCLUSÃO</h3>
+            <p class="text-xs text-gray-600 mb-6 uppercase font-bold">Deseja remover permanentemente o candidato?<br><span class="font-black text-slate-800 text-sm">${nome.toUpperCase()}</span></p>
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('modalConfirmExclusao').remove()" class="w-1/2 bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition uppercase text-[10px]">CANCELAR</button>
+                <button type="button" onclick="executarExclusaoCandidato('${nome}')" class="w-1/2 bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-red-700 transition uppercase text-[10px] tracking-widest font-black italic">SIM, EXCLUIR</button>
+            </div>
+        </div>
+    `;
+    modalConfirm.style.display = 'flex';
+    document.body.appendChild(modalConfirm);
+}
+
+async function executarExclusaoCandidato(nome) {
+    const modal = document.getElementById('modalConfirmExclusao');
+    const btnExcluir = modal.querySelector('button[onclick*="executarExclusaoCandidato"]');
+    btnExcluir.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    btnExcluir.disabled = true;
+
+    // PADRÃO OURO: Optimistic UI - Remove do cache local imediatamente
+    const index = dbCache.findIndex(i => i.nome === nome);
+    if(index !== -1) {
+        dbCache.splice(index, 1);
+        filterTable(); // Atualiza a tabela instantaneamente
+    }
+
+    const payload = { 
+        action: 'deleteBaptism', 
+        nome: nome 
+    };
+
+    try {
+        await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(payload), 
+            mode: 'no-cors' 
+        });
+        
+        showFeedback("Candidato removido com sucesso!");
+        modal.remove(); // Fecha o modal de confirmação
+    } catch(e) { 
+        showFeedback("Erro ao conectar com o servidor.", "error"); 
+        // Em caso de erro, recarrega a tabela para restaurar o dado se necessário
+        carregarBatismos(true); 
+    }
+}
     </script>
 </body>
 </html>
