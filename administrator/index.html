@@ -933,43 +933,49 @@ async function dispararExclusaoOtimista() {
             renderTableBatismo();
         }
        function renderTableBatismo() {
-            const tbody = document.getElementById('table-batismo');
-            
-            // Lógica de corte para paginação
-            const start = (currentPageBatismo - 1) * itemsPerPageBatismo;
-            const end = start + itemsPerPageBatismo;
-            const paginated = filteredBatismo.slice(start, end);
+    const tbody = document.getElementById('table-batismo');
+    
+    // Paginação para a aba de Batismo
+    const start = (currentPageBatismo - 1) * itemsPerPageBatismo;
+    const end = start + itemsPerPageBatismo;
+    const paginated = filteredBatismo.slice(start, end);
 
-            if(paginated.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
-                document.getElementById('pageInfoBatismo').innerText = "Página 1 de 1";
-                return;
-            }
+    if(paginated.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
+        document.getElementById('pageInfoBatismo').innerText = "Página 1 de 1";
+        return;
+    }
 
-            tbody.innerHTML = paginated.map(item => {
-                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
-                const msgWpp = `Olá *${item.nome_candidato.split(' ')[0]}*! 👋 Confirmamos seu *BATISMO*!🌊%0A🗓️ Data: *${item.data_batismo || 'A definir'}*%0A📍 Local: *${item.congregacao}*`;
+    tbody.innerHTML = paginated.map(item => {
+        const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+        const saudacao = `Olá *${item.nome_candidato.split(' ')[0]}*! Aqui é o(a) *${currentUser.nome.split(' ')[0]}* do DINC. Graça e Paz! 👋`;
+        
+        return `
+        <tr class="hover:bg-blue-50 transition border-b">
+            <td class="p-5">
+                <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro || '--/--/----'}</p>
+            </td>
+            <td class="p-5 font-bold text-slate-500 uppercase text-[10px]">${item.congregacao || '-'}</td>
+            <td class="p-5 font-bold text-slate-500 uppercase text-[10px] italic">${item.data_batismo || 'A DEFINIR'}</td>
+            <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status || 'Pendente'}</td>
+            <td class="p-5 text-right flex justify-end gap-2 no-print">
+                <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${encodeURIComponent(saudacao)}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                </a>
                 
-                return `
-                <tr class="hover:bg-blue-50 transition border-b">
-                    <td class="p-5">
-                        <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro}</p>
-                    </td>
-                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px]">${item.congregacao}</td>
-                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px] italic">${item.data_batismo || '-'}</td>
-                    <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status}</td>
-                    <td class="p-5 text-right flex justify-end gap-2">
-                        <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${msgWpp}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></a>
-                        <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
-                    </td>
-                </tr>`;
-            }).join('');
-            
-          // Atualiza o contador de páginas
-            const totalPages = Math.ceil(filteredBatismo.length / itemsPerPageBatismo) || 1;
-            document.getElementById('pageInfoBatismo').innerText = `Página ${currentPageBatismo} de ${totalPages}`;
-        }
+                <button onclick="confirmarExclusao('${item.nome_candidato}')" class="bg-red-100 text-red-600 p-2 rounded-lg hover:scale-110 transition active:scale-95">
+                    <i class="fa-solid fa-trash-can text-lg"></i>
+                </button>
+                
+                <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow transition-all active:scale-95">GERIR</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    const totalPages = Math.ceil(filteredBatismo.length / itemsPerPageBatismo) || 1;
+    document.getElementById('pageInfoBatismo').innerText = `Página ${currentPageBatismo} de ${totalPages}`;
+}
         
         // Função para trocar de página
         function changePageBatismo(dir) {
