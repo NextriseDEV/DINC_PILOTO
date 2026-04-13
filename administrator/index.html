@@ -177,7 +177,10 @@
             </div>
         </div> <div id="view-integracao" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                    <span id="totalIntegracao" class="bg-[#f47b20] text-white font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-sm">Total: 0</span>
+                </div>
                 <button onclick="gerarPDFIntegracao()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
             </div>
 
@@ -560,6 +563,8 @@
 
         function renderTableIntegracao() {
             const tbody = document.getElementById('table-integracao');
+            const elTotal = document.getElementById('totalIntegracao');
+            if(elTotal) elTotal.innerText = `Total: ${filteredIntegracao.length}`;
             const start = (currentPageIntegracao - 1) * itemsPerPageIntegracao;
             const end = start + itemsPerPageIntegracao;
             const paginated = filteredIntegracao.slice(start, end);
@@ -1203,40 +1208,41 @@ try {
                 btn.innerHTML = 'Confirmar e Abrir WhatsApp';
             }
         }
-        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM NOVAS COLUNAS
-function gerarPDFIntegracao() {
-    const { jsPDF } = window.jspdf;
-    // 'l' define a orientação como Landscape (Paisagem) para caber o endereço
-    const doc = new jsPDF('l', 'mm', 'a4'); 
-    
-    doc.setFontSize(14);
-    doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
-    
-    // Mapeia os dados focando em Nome, Telefone, E-mail e Endereço
-    const data = filteredIntegracao.map(i => [
-        i.nome, 
-        i.telefone, 
-        i['e-mail'] || i.email || '-', // Busca a chave gerada pelo GS
-        i.endereco || i.endereço || '-'
-    ]);
+        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM TOTAL
+        function gerarPDFIntegracao() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4'); 
+            
+            doc.setFontSize(14);
+            doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
+            
+            // NOVA LINHA: Adiciona o TOTAL no PDF
+            doc.setFontSize(10);
+            doc.text(`Total Filtrado: ${filteredIntegracao.length} candidato(s)`, 15, 22);
+            
+            const data = filteredIntegracao.map(i => [
+                i.nome, 
+                i.telefone, 
+                i['e-mail'] || i.email || '-', 
+                i.endereco || i.endereço || '-'
+            ]);
 
-    doc.autoTable({ 
-        head: [['NOME', 'TELEFONE', 'E-MAIL', 'ENDEREÇO']], 
-        body: data, 
-        startY: 25, 
-        theme: 'grid',
-        headStyles: { fillColor: [13, 45, 90] },
-        // Ajusta a largura das colunas para priorizar o endereço
-        columnStyles: {
-            0: { cellWidth: 50 }, // Nome
-            1: { cellWidth: 35 }, // Telefone
-            2: { cellWidth: 55 }, // Email
-            3: { cellWidth: 'auto' } // Endereço ocupa o restante
+            doc.autoTable({ 
+                head: [['NOME', 'TELEFONE', 'E-MAIL', 'ENDEREÇO']], 
+                body: data, 
+                startY: 28, // Baixei um pouco a tabela para caber o texto
+                theme: 'grid',
+                headStyles: { fillColor: [13, 45, 90] },
+                columnStyles: {
+                    0: { cellWidth: 50 }, 
+                    1: { cellWidth: 35 }, 
+                    2: { cellWidth: 55 }, 
+                    3: { cellWidth: 'auto' } 
+                }
+            });
+            
+            doc.save("Relatorio_Integracao_Completo.pdf");
         }
-    });
-    
-    doc.save("Relatorio_Integracao_Completo.pdf");
-}
         
       function confirmarExclusao(nome) {
     const modalConfirm = document.createElement('div');
