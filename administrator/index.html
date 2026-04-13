@@ -1203,31 +1203,40 @@ try {
                 btn.innerHTML = 'Confirmar e Abrir WhatsApp';
             }
         }
-        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO
-        function gerarPDFIntegracao() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(14);
-            doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
-            
-            // Mapeia os dados filtrados da aba integração
-            const data = filteredIntegracao.map(i => [
-                i.nome, 
-                i.telefone, 
-                i.status || 'Pendente', 
-                i.data_agendada || '-',
-                i.lider || '-'
-            ]);
+        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM NOVAS COLUNAS
+function gerarPDFIntegracao() {
+    const { jsPDF } = window.jspdf;
+    // 'l' define a orientação como Landscape (Paisagem) para caber o endereço
+    const doc = new jsPDF('l', 'mm', 'a4'); 
+    
+    doc.setFontSize(14);
+    doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
+    
+    // Mapeia os dados focando em Nome, Telefone, E-mail e Endereço
+    const data = filteredIntegracao.map(i => [
+        i.nome, 
+        i.telefone, 
+        i['e-mail'] || i.email || '-', // Busca a chave gerada pelo GS
+        i.endereco || i.endereço || '-'
+    ]);
 
-            doc.autoTable({ 
-                head: [['NOME', 'TELEFONE', 'STATUS', 'DATA AGENDADA', 'LÍDER']], 
-                body: data, 
-                startY: 25, 
-                theme: 'grid',
-                headStyles: { fillColor: [13, 45, 90] }
-            });
-            doc.save("Relatorio_Integracao_5Andar.pdf");
+    doc.autoTable({ 
+        head: [['NOME', 'TELEFONE', 'E-MAIL', 'ENDEREÇO']], 
+        body: data, 
+        startY: 25, 
+        theme: 'grid',
+        headStyles: { fillColor: [13, 45, 90] },
+        // Ajusta a largura das colunas para priorizar o endereço
+        columnStyles: {
+            0: { cellWidth: 50 }, // Nome
+            1: { cellWidth: 35 }, // Telefone
+            2: { cellWidth: 55 }, // Email
+            3: { cellWidth: 'auto' } // Endereço ocupa o restante
         }
+    });
+    
+    doc.save("Relatorio_Integracao_Completo.pdf");
+}
         
       function confirmarExclusao(nome) {
     const modalConfirm = document.createElement('div');
