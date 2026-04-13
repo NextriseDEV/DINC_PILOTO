@@ -191,8 +191,8 @@
             
             <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
                 <div class="flex gap-2">
-                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
+                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
                     <select id="fPeriodoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
                 </div>
             </div>
@@ -1080,6 +1080,8 @@ async function dispararExclusaoOtimista() {
             try {
                 const res = await fetch(`${API_URL}?action=getIntegracoes`);
                 integracaoCache = await res.json();
+                // CHAME AQUI PARA ATUALIZAR OS FILTROS SOZINHO
+        atualizarFiltrosDinamicos(integracaoCache, 'fAnoIntegracao', 'fMesIntegracao');
                 filterIntegracao();
             } catch (e) { 
                 tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500 font-black italic uppercase">Erro ao carregar aba Integrações.</td></tr>'; 
@@ -1159,55 +1161,51 @@ async function dispararExclusaoOtimista() {
         }
 
         async function salvarMudancaIntegracao(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnSalvarInt');
-            const nome = document.getElementById('intEditNome').value;
-            const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
-            const status = document.getElementById('intEditStatus').value;
-            const dataRaw = document.getElementById('intEditData').value;
-            const dataFormatada = dataRaw.split('-').reverse().join('/');
-            
-            // Pega o primeiro nome do usuário logado (armazenado no localStorage no login)
-            const usuarioLogado = JSON.parse(localStorage.getItem('userDinc')) || { nome: "Secretaria" };
-            const nomeRemetente = usuarioLogado.nome.split(' ')[0];
-            
-            
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
+    e.preventDefault();
+    const btn = document.getElementById('btnSalvarInt');
+    const nome = document.getElementById('intEditNome').value;
+    const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
+    const status = document.getElementById('intEditStatus').value;
+    const dataRaw = document.getElementById('intEditData').value;
+    const dataFormatada = dataRaw.split('-').reverse().join('/');
+    
+    // Puxa o nome do operador logado diretamente da variável global do sistema
+    const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
+    
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
 
-            const payload = {
-                action: 'updateIntegracao',
-                nome: nome,
-                status: status,
-                dataAgendada: dataFormatada,
-                lider: nomeRemetente
-                
-            };
+    const payload = {
+        action: 'updateIntegracao',
+        nome: nome,
+        status: status,
+        dataAgendada: dataFormatada,
+        lider: nomeOperador
+    };
 
-try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                
-                showFeedback("Integração Atualizada!");
-                document.getElementById('modalGerirIntegracao').style.display = 'none';
-                
-                // --- NOVA MENSAGEM PADRÃO OURO ---
-                const saudacao = "A Paz do Senhor Jesus";
-                const primeiroNomeCandidato = nome.split(' ')[0].toUpperCase();
-                
-                const msg = `${saudacao} *${primeiroNomeCandidato}*! 👋\n\n` +
-                            `Aqui é o *${nomeRemetente}* da *ADSA Brasil*.\n\n` +
-                            `Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz.\n\n` +
-                            `📍 *Endereço:* https://share.google/eWDtXCXBdV2gOunH8\n\n` +
-                            `Sua presença é muito importante para nós! Deus abençoe.`;
+    try {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+        
+        showFeedback("Integração Atualizada!");
+        document.getElementById('modalGerirIntegracao').style.display = 'none';
+        
+        // MENSAGEM PADRÃO OURO - Agora com o nome de quem está enviando
+        const primeiroNomeCandidato = nome.split(' ')[0].toUpperCase();
+        
+        const msg = `A Paz do Senhor Jesus *${primeiroNomeCandidato}*! 👋\n\n` +
+                    `Aqui é o(a) *${nomeOperador}* da *ADSA Brasil*.\n\n` +
+                    `Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz.\n\n` +
+                    `📍 *Endereço:* https://share.google/eWDtXCXBdV2gOunH8\n\n` +
+                    `Sua presença é muito importante para nós! Deus abençoe.`;
 
-                window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
-                
-                carregarIntegracoes(true);
-            } catch(e) {
-                showFeedback("Erro ao salvar.", "error");
-            } finally {
-                btn.innerHTML = 'Confirmar e Abrir WhatsApp';
-            }
-        }
+        window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+        
+        carregarIntegracoes(true);
+    } catch(e) {
+        showFeedback("Erro ao salvar.", "error");
+    } finally {
+        btn.innerHTML = 'Confirmar e Abrir WhatsApp';
+    }
+}
         // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM TOTAL
         function gerarPDFIntegracao() {
             const { jsPDF } = window.jspdf;
@@ -1294,6 +1292,44 @@ async function executarExclusaoCandidato(nome) {
         // Em caso de erro, recarrega a tabela para restaurar o dado se necessário
         carregarBatismos(true); 
     }
+}
+
+        function atualizarFiltrosDinamicos(dados, idAno, idMes) {
+    const selectAno = document.getElementById(idAno);
+    const selectMes = document.getElementById(idMes);
+    if (!selectAno || !selectMes) return;
+
+    const anos = new Set();
+    const meses = new Set();
+
+    dados.forEach(item => {
+        // Tenta pegar a data de cadastro ou data comum
+        const dataStr = item.data_cadastro || item.data;
+        if (dataStr && dataStr.includes('/')) {
+            const partes = dataStr.split('/');
+            if (partes.length === 3) {
+                anos.add(partes[2].trim());
+                meses.add(partes[1].trim());
+            }
+        }
+    });
+
+    // Monta Anos (Ordenado do mais novo para o mais antigo)
+    const anosOrdenados = Array.from(anos).sort((a, b) => b - a);
+    selectAno.innerHTML = anosOrdenados.map(ano => `<option value="${ano}">${ano}</option>`).join('');
+
+    // Monta Meses
+    const nomesMeses = {
+        "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr", "05": "Mai", "06": "Jun",
+        "07": "Jul", "08": "Ago", "09": "Set", "10": "Out", "11": "Nov", "12": "Dez"
+    };
+    
+    let htmlMes = '<option value="">Todos Meses</option>';
+    const mesesOrdenados = Array.from(meses).sort();
+    mesesOrdenados.forEach(m => {
+        htmlMes += `<option value="/${m}/">${nomesMeses[m] || m}</option>`;
+    });
+    selectMes.innerHTML = htmlMes;
 }
     </script>
 </body>
