@@ -17,30 +17,45 @@
 
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-[#0d2d5a] text-3xl font-black italic shadow-xl">DINC</div>
-            <h1 class="text-white text-3xl font-black uppercase tracking-tighter">Faça sua Integração</h1>
-            <p class="text-blue-200 text-sm mt-2">Preencha os dados abaixo para agendarmos sua recepção no 5º andar.</p>
+            <div class="flex justify-center gap-6 mb-6">
+                <img src="https://nextrisedev.github.io/DINC_PILOTO/administrator/m%C3%A9dia/ADSA.png" alt="ADSA" class="h-44 w-auto object-contain" style="filter: brightness(0) invert(1);">
+                <img src="https://nextrisedev.github.io/DINC_PILOTO/administrator/m%C3%A9dia/DINC.png" alt="DINC" class="h-44 w-auto object-contain" style="filter: brightness(0) invert(1);">
+            </div>
+            <h1 class="text-2xl font-black text-white uppercase tracking-tighter">Ficha de Integração</h1>
+            <p class="text-blue-200 text-xs font-bold uppercase tracking-widest mt-2 italic">Seja muito bem-vindo à família ADSA Brasil!</p>
         </div>
 
-        <form onsubmit="enviarInscricao(event)" class="glass p-8 rounded-[2.5rem] space-y-5 shadow-2xl">
+        <form onsubmit="enviarInscricao(event)" class="glass p-8 rounded-3xl shadow-2xl space-y-5">
             <div>
-                <label class="text-[10px] font-bold text-blue-300 uppercase ml-2">Nome Completo *</label>
-                <input type="text" id="lpNome" required placeholder="Digite seu nome" class="w-full p-4 rounded-2xl bg-white/10 border border-white/20 text-white outline-none focus:border-yellow-500 transition-all uppercase font-bold text-sm">
+                <label class="block text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 ml-1">Nome Completo</label>
+                <input type="text" id="lpNome" required class="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all uppercase font-bold text-sm" placeholder="DIGITE SEU NOME">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 ml-1">Telefone (WhatsApp)</label>
+                    <input type="tel" id="lpTel" required class="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-bold text-sm" placeholder="(00) 00000-0000">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 ml-1">Data Nascimento</label>
+                    <input type="date" id="lpNasc" required class="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-bold text-sm">
+                </div>
             </div>
 
             <div>
-                <label class="text-[10px] font-bold text-blue-300 uppercase ml-2">WhatsApp *</label>
-                <input type="text" id="lpTel" required oninput="mascaraTel(this)" placeholder="(00) 00000-0000" class="w-full p-4 rounded-2xl bg-white/10 border border-white/20 text-white outline-none focus:border-yellow-500 transition-all font-bold text-sm">
+                <label class="block text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 ml-1">E-mail</label>
+                <input type="email" id="lpEmail" required class="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-bold text-sm" placeholder="seuemail@exemplo.com">
             </div>
 
             <div>
-                <label class="text-[10px] font-bold text-blue-300 uppercase ml-2">Data de Nascimento (Opcional)</label>
-                <input type="date" id="lpNasc" class="w-full p-4 rounded-2xl bg-white/10 border border-white/20 text-white outline-none focus:border-yellow-500 transition-all font-bold text-sm">
+                <label class="block text-[10px] font-black text-blue-200 uppercase tracking-widest mb-2 ml-1">Endereço Residencial</label>
+                <input type="text" id="lpEndereco" required class="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all uppercase font-bold text-sm" placeholder="RUA, NÚMERO, BAIRRO, CIDADE">
             </div>
 
-            <button type="submit" id="btnEnviar" class="w-full btn-gradient text-[#0d2d5a] font-black py-5 rounded-2xl shadow-lg uppercase italic tracking-widest hover:scale-[1.02] transition-all">Enviar Inscrição</button>
+            <button type="submit" id="btnEnviar" class="w-full btn-gradient text-white font-black py-5 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs italic">
+                Enviar Inscrição
+            </button>
         </form>
-    </div>
 
     <div id="modalFeedback" class="modal-feedback">
         <div class="text-center max-w-xs">
@@ -61,29 +76,32 @@
             i.value = v;
         }
 
-        async function enviarInscricao(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btnEnviar');
-            btn.innerHTML = 'Enviando...';
-            btn.disabled = true;
+        // Atualização do payload para incluir E-mail e Endereço
+async function enviarInscricao(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnEnviar');
+    btn.innerHTML = 'Enviando...';
+    btn.disabled = true;
 
-            const payload = {
-                action: 'saveIntegracaoLP',
-                nome: document.getElementById('lpNome').value,
-                telefone: document.getElementById('lpTel').value,
-                nascimento: document.getElementById('lpNasc').value
-            };
+    const payload = {
+        action: 'saveIntegracaoLP',
+        nome: document.getElementById('lpNome').value,
+        telefone: document.getElementById('lpTel').value,
+        nascimento: document.getElementById('lpNasc').value,
+        email: document.getElementById('lpEmail').value,       // NOVO CAMPO
+        endereco: document.getElementById('lpEndereco').value  // NOVO CAMPO
+    };
 
-            try {
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                mostrarFeedback(true);
-            } catch (err) {
-                mostrarFeedback(false);
-            } finally {
-                btn.innerHTML = 'Enviar Inscrição';
-                btn.disabled = false;
-            }
-        }
+    try {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+        mostrarFeedback(true);
+    } catch (err) {
+        mostrarFeedback(false);
+    } finally {
+        btn.innerHTML = 'Enviar Inscrição';
+        btn.disabled = false;
+    }
+}
 
         function mostrarFeedback(sucesso) {
             const modal = document.getElementById('modalFeedback');
