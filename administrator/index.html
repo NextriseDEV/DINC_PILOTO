@@ -86,13 +86,13 @@
     <div class="content">
         <div id="view-dashboard">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
-                <div class="flex gap-2">
-                    <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option></select>
-                    <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
-                </div>
-            </div>
+    <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
+    <div class="flex gap-2">
+        <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+        <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
+        <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+    </div>
+</div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Total</p><h3 class="text-2xl font-black text-gray-800" id="stat-total">0</h3></div>
@@ -153,12 +153,12 @@
             </div>
             
             <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
-                <div class="flex gap-2">
-                    <select id="fAnoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMesBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
-                    <select id="fPeriodoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
-                </div>
-            </div>
+    <div class="flex gap-2">
+        <select id="fAnoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+        <select id="fMesBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
+        <select id="fPeriodoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+    </div>
+</div>
 
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto">
@@ -415,6 +415,7 @@
                 const res = await fetch(`${API_URL}?action=getDados`);
                 if (!res.ok) throw new Error("Erro na rede ou URL da API");
                 dbCache = await res.json();
+                atualizarFiltrosDinamicos(dbCache, 'fAno', 'fMes');
                 filterTable();
             } catch (e) { 
                 console.error("Erro DINC API:", e);
@@ -919,6 +920,7 @@ async function dispararExclusaoOtimista() {
             try {
                 const res = await fetch(`${API_URL}?action=getBatismos`);
                 batismoCache = await res.json();
+                atualizarFiltrosDinamicos(batismoCache, 'fAnoBatismo', 'fMesBatismo');
                 filterBatismo();
             } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Falha ao conectar aos Batismos.</td></tr>'; }
         }
