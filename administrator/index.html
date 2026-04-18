@@ -1209,9 +1209,11 @@ async function dispararExclusaoOtimista() {
             const nomeNovo = document.getElementById('intEditNome').value;
             const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
             const status = document.getElementById('intEditStatus').value;
-            const dataFormatada = document.getElementById('intEditData').value.split('-').reverse().join('/');
+            const dataInput = document.getElementById('intEditData').value;
+            const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : "";
             
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
+            btn.disabled = true;
 
             const payload = {
                 action: 'updateIntegracao',
@@ -1227,25 +1229,29 @@ async function dispararExclusaoOtimista() {
 
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                
                 showFeedback("Ficha Sincronizada!");
                 document.getElementById('modalGerirIntegracao').style.display = 'none';
-                
+
+                // CORREÇÃO: Disparo do WhatsApp com as variáveis locais corretas
                 if(status === "Agendado") {
                     const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
-                    const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNome}*! recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). 👋 Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${data}* às *16h30*, no *5º andar*, na *ADSA Matriz*. Deus abençoe!
-                    Ficamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.
-                    Deus abençoe!
-                    Pr Galdino Jr`;
-                    window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+                    const primeiroNomeCand = nomeNovo.split(' ')[0].toUpperCase();
+                    
+                    const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNomeCand}*! 👋 recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${dataFormatada}* às *16h30*, no *5º andar*, na *ADSA Matriz*. %0A%0AFicamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.%0ADeus abençoe!%0APr Galdino Jr`;
+                    
+                    window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${msg}`, '_blank');
                 }
                 
                 carregarIntegracoes(true);
             } catch(e) {
-                showFeedback("Erro ao salvar.", "error");
+                console.error(e);
+                showFeedback("Erro ao salvar no servidor.", "error");
             } finally {
                 btn.innerHTML = 'Salvar Alterações e Notificar';
+                btn.disabled = false;
             }
-        }
+        } 
         // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM TOTAL
         function gerarPDFIntegracao() {
             const { jsPDF } = window.jspdf;
