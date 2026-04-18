@@ -633,8 +633,8 @@
             const primeiroNome = nome.split(' ')[0];
             const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNome}*! recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). 👋 Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${data}* às *16h30*, no *5º andar*, na *ADSA Matriz*. Deus abençoe!
             Ficamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.
-Deus abençoe!
-Pr Galdino Jr`;
+            Deus abençoe!
+            Pr Galdino Jr`;
             window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -1232,7 +1232,10 @@ async function dispararExclusaoOtimista() {
                 
                 if(status === "Agendado") {
                     const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
-                    const msg = `Olá *${nomeNovo.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz. Sua presença é muito importante!`;
+                    const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNome}*! recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). 👋 Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${data}* às *16h30*, no *5º andar*, na *ADSA Matriz*. Deus abençoe!
+                    Ficamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.
+                    Deus abençoe!
+                    Pr Galdino Jr`;
                     window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
                 }
                 
