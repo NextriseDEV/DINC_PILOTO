@@ -599,7 +599,10 @@
 
         function enviarWppIntegracaoPadrao(nome, tel, data) {
             const primeiroNome = nome.split(' ')[0];
-            const msg = `Olá *${primeiroNome}*! 👋 Sua integração será dia *${data}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Deus abençoe!`;
+            const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNome}*! recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). 👋 Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${data}* às *16h30*, no *5º andar*, na *ADSA Matriz*. Deus abençoe!
+            Ficamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.
+Deus abençoe!
+Pr Galdino Jr`;
             window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
         }
 
