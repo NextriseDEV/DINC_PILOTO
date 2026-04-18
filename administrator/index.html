@@ -302,33 +302,65 @@
         </div>
     </div>
     <div id="modalGerirIntegracao" class="modal-analise">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-yellow-500">
-            <div class="bg-[#0d2d5a] p-8 text-white flex justify-between items-center">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-yellow-500">
+            <div class="bg-[#0d2d5a] p-6 text-white flex justify-between items-center">
                 <div>
                     <h3 id="intModalNome" class="font-black text-xl uppercase italic">--</h3>
-                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest italic">Agendar Recepção 5º Andar</p>
+                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest italic">Ficha Completa de Integração</p>
                 </div>
-                <button onclick="document.getElementById('modalGerirIntegracao').style.display='none'" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <div class="flex gap-2">
+                    <button onclick="imprimirFichaIndividual()" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all" title="Imprimir Ficha">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
+                    <button onclick="document.getElementById('modalGerirIntegracao').style.display='none'" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
             </div>
-            <form class="p-8 space-y-4" onsubmit="salvarMudancaIntegracao(event)">
-                <input type="hidden" id="intEditNome">
-                <input type="hidden" id="intEditTel">
+            <form class="p-8 space-y-4 max-h-[75vh] overflow-y-auto custom-scroll" onsubmit="salvarMudancaIntegracao(event)">
+                <input type="hidden" id="intEditNomeOriginal">
                 
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status da Integração</label>
-                    <select id="intEditStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
-                        <option value="Pendente de Agendamento">Pendente de Agendamento</option>
-                        <option value="Agendado">Agendado</option>
-                        <option value="Concluido">Concluído</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data da Integração</label>
-                    <input type="date" id="intEditData" class="w-full p-3 border rounded-xl outline-none font-bold text-xs" required>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Nome Completo</label>
+                        <input type="text" id="intEditNome" class="w-full p-3 border rounded-xl font-bold text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">WhatsApp</label>
+                        <input type="text" id="intEditTel" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
                 </div>
 
-                <button type="submit" id="btnSalvarInt" class="w-full bg-[#0d2d5a] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">Confirmar e Abrir WhatsApp</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">E-mail</label>
+                        <input type="email" id="intEditEmail" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data Nascimento</label>
+                        <input type="text" id="intEditNasc" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Endereço Residencial</label>
+                    <input type="text" id="intEditEnd" class="w-full p-3 border rounded-xl font-bold text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status</label>
+                        <select id="intEditStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
+                            <option value="Pendente de Agendamento">Pendente de Agendamento</option>
+                            <option value="Agendado">Agendado</option>
+                            <option value="Concluido">Concluído</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data da Integração</label>
+                        <input type="date" id="intEditData" class="w-full p-3 border rounded-xl font-bold text-xs">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSalvarInt" class="w-full bg-[#0d2d5a] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">Salvar Alterações e Notificar</button>
             </form>
         </div>
     </div>
@@ -1152,65 +1184,65 @@ async function dispararExclusaoOtimista() {
             if(!reg) return;
 
             document.getElementById('intModalNome').innerText = reg.nome;
+            document.getElementById('intEditNomeOriginal').value = reg.nome;
             document.getElementById('intEditNome').value = reg.nome;
             document.getElementById('intEditTel').value = reg.telefone;
+            document.getElementById('intEditEmail').value = reg['e-mail'] || reg.email || '';
+            document.getElementById('intEditEnd').value = reg.endereco || reg.endereço || '';
+            document.getElementById('intEditNasc').value = reg.nascimento || '';
             document.getElementById('intEditStatus').value = reg.status || "Pendente de Agendamento";
             
-            // Tenta formatar data para o input date (yyyy-mm-dd)
             if(reg.data_agendada && reg.data_agendada.includes('/')) {
                 const p = reg.data_agendada.split('/');
                 document.getElementById('intEditData').value = `${p[2]}-${p[1]}-${p[0]}`;
+            } else {
+                document.getElementById('intEditData').value = '';
             }
 
             document.getElementById('modalGerirIntegracao').style.display = 'flex';
         }
 
-        async function salvarMudancaIntegracao(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnSalvarInt');
-    const nome = document.getElementById('intEditNome').value;
-    const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
-    const status = document.getElementById('intEditStatus').value;
-    const dataRaw = document.getElementById('intEditData').value;
-    const dataFormatada = dataRaw.split('-').reverse().join('/');
-    
-    // Puxa o nome do operador logado diretamente da variável global do sistema
-    const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
-    
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
+       async function salvarMudancaIntegracao(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSalvarInt');
+            const nomeOriginal = document.getElementById('intEditNomeOriginal').value;
+            const nomeNovo = document.getElementById('intEditNome').value;
+            const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
+            const status = document.getElementById('intEditStatus').value;
+            const dataFormatada = document.getElementById('intEditData').value.split('-').reverse().join('/');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
 
-    const payload = {
-        action: 'updateIntegracao',
-        nome: nome,
-        status: status,
-        dataAgendada: dataFormatada,
-        lider: nomeOperador
-    };
+            const payload = {
+                action: 'updateIntegracao',
+                nomeOriginal: nomeOriginal,
+                nome: nomeNovo,
+                telefone: document.getElementById('intEditTel').value,
+                email: document.getElementById('intEditEmail').value,
+                endereco: document.getElementById('intEditEnd').value,
+                nascimento: document.getElementById('intEditNasc').value,
+                status: status,
+                dataAgendada: dataFormatada
+            };
 
-    try {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-        
-        showFeedback("Integração Atualizada!");
-        document.getElementById('modalGerirIntegracao').style.display = 'none';
-        
-        // MENSAGEM PADRÃO OURO - Agora com o nome de quem está enviando
-        const primeiroNomeCandidato = nome.split(' ')[0].toUpperCase();
-        
-        const msg = `A Paz do Senhor Jesus *${primeiroNomeCandidato}*! 👋\n\n` +
-                    `Aqui é o(a) *${nomeOperador}* da *ADSA Brasil*.\n\n` +
-                    `Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz.\n\n` +
-                    `📍 *Endereço:* https://share.google/eWDtXCXBdV2gOunH8\n\n` +
-                    `Sua presença é muito importante para nós! Deus abençoe.`;
-
-        window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
-        
-        carregarIntegracoes(true);
-    } catch(e) {
-        showFeedback("Erro ao salvar.", "error");
-    } finally {
-        btn.innerHTML = 'Confirmar e Abrir WhatsApp';
-    }
-}
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                showFeedback("Ficha Sincronizada!");
+                document.getElementById('modalGerirIntegracao').style.display = 'none';
+                
+                if(status === "Agendado") {
+                    const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
+                    const msg = `Olá *${nomeNovo.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz. Sua presença é muito importante!`;
+                    window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+                }
+                
+                carregarIntegracoes(true);
+            } catch(e) {
+                showFeedback("Erro ao salvar.", "error");
+            } finally {
+                btn.innerHTML = 'Salvar Alterações e Notificar';
+            }
+        }
         // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM TOTAL
         function gerarPDFIntegracao() {
             const { jsPDF } = window.jspdf;
@@ -1336,6 +1368,61 @@ async function executarExclusaoCandidato(nome) {
     });
     selectMes.innerHTML = htmlMes;
 }
+
+function imprimirFichaIndividual() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const nome = document.getElementById('intEditNome').value;
+            const tel = document.getElementById('intEditTel').value;
+            const email = document.getElementById('intEditEmail').value;
+            const end = document.getElementById('intEditEnd').value;
+            const nasc = document.getElementById('intEditNasc').value;
+            const status = document.getElementById('intEditStatus').value;
+            const agendado = document.getElementById('intEditData').value.split('-').reverse().join('/');
+
+            // Cabeçalho com Logos
+            doc.setFillColor(13, 45, 90);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setFontSize(22);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("FICHA DE INTEGRAÇÃO", 105, 25, { align: "center" });
+
+            // Conteúdo Estilizado (Inspirado no anexo)
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString()}`, 15, 50);
+
+            const rows = [
+                ["NOME COMPLETO:", nome.toUpperCase()],
+                ["DATA NASCIMENTO:", nasc],
+                ["WHATSAPP:", tel],
+                ["ENDEREÇO:", end.toUpperCase()],
+                ["E-MAIL:", email.toLowerCase()],
+                ["STATUS ATUAL:", status.toUpperCase()],
+                ["DATA AGENDADA:", agendado || "NÃO AGENDADO"]
+            ];
+
+            doc.autoTable({
+                startY: 60,
+                body: rows,
+                theme: 'plain',
+                styles: { fontSize: 12, cellPadding: 6 },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 50, textColor: [100, 100, 100] },
+                    1: { cellWidth: 'auto' }
+                }
+            });
+
+            // Rodapé
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text("ADSA BRASIL - Departamento de Integração e Novos Convertidos (DINC)", 105, 280, { align: "center" });
+
+            doc.save(`Ficha_${nome.replace(/\s+/g, '_')}.pdf`);
+        }
     </script>
 </body>
 </html>
