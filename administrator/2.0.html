@@ -86,13 +86,13 @@
     <div class="content">
         <div id="view-dashboard">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
-                <div class="flex gap-2">
-                    <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option></select>
-                    <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
-                </div>
-            </div>
+    <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Almas</h2>
+    <div class="flex gap-2">
+        <select id="fAno" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+        <select id="fMes" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
+        <select id="fPeriodo" onchange="filterTable()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+    </div>
+</div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-400 text-[9px] uppercase font-bold tracking-widest">Total</p><h3 class="text-2xl font-black text-gray-800" id="stat-total">0</h3></div>
@@ -153,12 +153,12 @@
             </div>
             
             <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
-                <div class="flex gap-2">
-                    <select id="fAnoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMesBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
-                    <select id="fPeriodoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
-                </div>
-            </div>
+    <div class="flex gap-2">
+        <select id="fAnoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+        <select id="fMesBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
+        <select id="fPeriodoBatismo" onchange="filterBatismo()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+    </div>
+</div>
 
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto">
@@ -169,11 +169,18 @@
                         <tbody id="table-batismo" class="text-xs divide-y"></tbody>
                     </table>
                 </div>
+      <div class="p-4 bg-slate-50 border-t flex justify-between items-center no-print">
+                    <button onclick="changePageBatismo(-1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Anterior</button>
+                    <span id="pageInfoBatismo" class="text-[10px] font-bold text-slate-400">Página 1 de 1</span>
+                    <button onclick="changePageBatismo(1)" class="text-[10px] font-black text-blue-900 uppercase p-2 hover:bg-white rounded-lg transition-all">Próxima</button>
+                </div>
             </div>
-        </div>
-        <div id="view-integracao" class="hidden">
+        </div> <div id="view-integracao" class="hidden">
             <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                    <span id="totalIntegracao" class="bg-[#f47b20] text-white font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-sm">Total: 0</span>
+                </div>
                 <button onclick="gerarPDFIntegracao()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
             </div>
 
@@ -184,8 +191,8 @@
             
             <div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
                 <div class="flex gap-2">
-                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"><option value="2026">2026</option><option value="2025">2025</option></select>
-                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Todos Meses</option><option value="/01/">Jan</option><option value="/02/">Fev</option><option value="/03/">Mar</option></select>
+                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
+                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
                     <select id="fPeriodoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
                 </div>
             </div>
@@ -214,6 +221,13 @@
                     <input id="nbNome" placeholder="NOME COMPLETO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" required>
                     <input id="nbTel" placeholder="TELEFONE (DDD + NÚMERO)" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold focus:ring-2 focus:ring-blue-900" required>
                     <input id="nbLoja" placeholder="CONGREGAÇÃO" class="w-full p-4 border rounded-2xl outline-none text-xs font-bold uppercase focus:ring-2 focus:ring-blue-900" value="ADSA BRASIL MATRIZ" required>
+                    <div>
+                  <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Horário do Culto</label>
+                  <select id="nbPeriodo" class="w-full p-4 border rounded-2xl font-black bg-slate-50 outline-none text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                  <option value="MANHÃ">DOMINGO - MANHÃ</option>
+                  <option value="NOITE">DOMINGO - NOITE</option>
+                 </select>
+                  </div>
                     <button type="submit" id="btnSalvarBatismo" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg uppercase text-[10px] font-black italic">CADASTRAR CANDIDATO</button>
                 </form>
                 <button onclick="document.getElementById('modalNovoBatismo').style.display='none'" class="mt-4 text-[10px] font-black text-gray-300 uppercase tracking-widest hover:text-red-500 transition">CANCELAR</button>
@@ -288,33 +302,65 @@
         </div>
     </div>
     <div id="modalGerirIntegracao" class="modal-analise">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-yellow-500">
-            <div class="bg-[#0d2d5a] p-8 text-white flex justify-between items-center">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl m-4 border-t-4 border-yellow-500">
+            <div class="bg-[#0d2d5a] p-6 text-white flex justify-between items-center">
                 <div>
                     <h3 id="intModalNome" class="font-black text-xl uppercase italic">--</h3>
-                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest italic">Agendar Recepção 5º Andar</p>
+                    <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest italic">Ficha Completa de Integração</p>
                 </div>
-                <button onclick="document.getElementById('modalGerirIntegracao').style.display='none'" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                <div class="flex gap-2">
+                    <button onclick="imprimirFichaIndividual()" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all" title="Imprimir Ficha">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
+                    <button onclick="document.getElementById('modalGerirIntegracao').style.display='none'" class="text-blue-300 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
             </div>
-            <form class="p-8 space-y-4" onsubmit="salvarMudancaIntegracao(event)">
-                <input type="hidden" id="intEditNome">
-                <input type="hidden" id="intEditTel">
+            <form class="p-8 space-y-4 max-h-[75vh] overflow-y-auto custom-scroll" onsubmit="salvarMudancaIntegracao(event)">
+                <input type="hidden" id="intEditNomeOriginal">
                 
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status da Integração</label>
-                    <select id="intEditStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
-                        <option value="Pendente de Agendamento">Pendente de Agendamento</option>
-                        <option value="Agendado">Agendado</option>
-                        <option value="Concluido">Concluído</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data da Integração</label>
-                    <input type="date" id="intEditData" class="w-full p-3 border rounded-xl outline-none font-bold text-xs" required>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Nome Completo</label>
+                        <input type="text" id="intEditNome" class="w-full p-3 border rounded-xl font-bold text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">WhatsApp</label>
+                        <input type="text" id="intEditTel" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
                 </div>
 
-                <button type="submit" id="btnSalvarInt" class="w-full bg-[#0d2d5a] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">Confirmar e Abrir WhatsApp</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">E-mail</label>
+                        <input type="email" id="intEditEmail" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data Nascimento</label>
+                        <input type="text" id="intEditNasc" class="w-full p-3 border rounded-xl font-bold text-xs focus:ring-2 focus:ring-blue-900">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Endereço Residencial</label>
+                    <input type="text" id="intEditEnd" class="w-full p-3 border rounded-xl font-bold text-xs uppercase focus:ring-2 focus:ring-blue-900">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Status</label>
+                        <select id="intEditStatus" class="w-full p-3 border rounded-xl font-black text-blue-900 bg-slate-50 outline-none uppercase text-xs">
+                            <option value="Pendente de Agendamento">Pendente de Agendamento</option>
+                            <option value="Agendado">Agendado</option>
+                            <option value="Concluido">Concluído</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-gray-400 uppercase block mb-1">Data da Integração</label>
+                        <input type="date" id="intEditData" class="w-full p-3 border rounded-xl font-bold text-xs">
+                    </div>
+                </div>
+
+                <button type="submit" id="btnSalvarInt" class="w-full bg-[#0d2d5a] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition uppercase text-[10px] tracking-widest italic">Salvar Alterações e Notificar</button>
             </form>
         </div>
     </div>
@@ -362,6 +408,8 @@
         let filteredIntegracao = [];
         let currentPageIntegracao = 1;
         const itemsPerPageIntegracao = 10;
+        let currentPageBatismo = 1; // Controle de página para batismo
+        const itemsPerPageBatismo = 10; // Limite de 10 por página
 
         async function realizarLogin(e) {
             e.preventDefault();
@@ -399,6 +447,7 @@
                 const res = await fetch(`${API_URL}?action=getDados`);
                 if (!res.ok) throw new Error("Erro na rede ou URL da API");
                 dbCache = await res.json();
+                atualizarFiltrosDinamicos(dbCache, 'fAno', 'fMes');
                 filterTable();
             } catch (e) { 
                 console.error("Erro DINC API:", e);
@@ -506,20 +555,25 @@
             // Gerencia estado ativo do menu
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             
-            if(v === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+            if(v === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+            }
             if(v === 'crescimento') {
-              document.getElementById('nav-crescimento').classList.add('active');
-              initGrowChart(); // CORREÇÃO: Chama o gráfico de crescimento
+                document.getElementById('nav-crescimento').classList.add('active');
+                initGrowChart(); 
             }
-            
-            if(v === 'batismo') document.getElementById('nav-batismo').classList.add('active');
-            if(v === 'integracao') {document.getElementById('nav-integracao').classList.add('active');carregarIntegracoes();
+            if(v === 'batismo') {
+                document.getElementById('nav-batismo').classList.add('active');
+            }
+            if(v === 'integracao') {
+                document.getElementById('nav-integracao').classList.add('active');
+                carregarIntegracoes();
+            }
             if(v === 'users') {
-              document.getElementById('btnMenuUsers').classList.add('active');
-              carregarUsuarios(); // CORREÇÃO: Chama a lista de equipe
+                document.getElementById('btnMenuUsers').classList.add('active');
+                carregarUsuarios(); 
             }
             
-            }
             if(window.innerWidth < 768) toggleMenu();
         }
         
@@ -542,6 +596,8 @@
 
         function renderTableIntegracao() {
             const tbody = document.getElementById('table-integracao');
+            const elTotal = document.getElementById('totalIntegracao');
+            if(elTotal) elTotal.innerText = `Total: ${filteredIntegracao.length}`;
             const start = (currentPageIntegracao - 1) * itemsPerPageIntegracao;
             const end = start + itemsPerPageIntegracao;
             const paginated = filteredIntegracao.slice(start, end);
@@ -575,7 +631,10 @@
 
         function enviarWppIntegracaoPadrao(nome, tel, data) {
             const primeiroNome = nome.split(' ')[0];
-            const msg = `Olá *${primeiroNome}*! 👋 Sua integração será dia *${data}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Deus abençoe!`;
+            const msg = `A Paz do Senhor Jesus Cristo irmão(a) *${primeiroNome}*! recebemos o seu contato com a intenção de fazer parte da família ADSA Brasil, seja bem vindo(a). 👋 Gostaria de saber da sua disponibilidade de participar do nosso café de integração e boas vindas que será realizado no dia *${data}* às *16h30*, no *5º andar*, na *ADSA Matriz*. Deus abençoe!
+            Ficamos no aguardo de vossa confirmação e estamos a disposição para quaisquer dúvidas.
+Deus abençoe!
+Pr Galdino Jr`;
             window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -793,7 +852,7 @@ async function dispararExclusaoOtimista() {
             const payload = {
                 action: 'update', nome: document.getElementById('editNome').value,
                 nascimento: document.getElementById('editDN').value.split('-').reverse().join('/'),
-                status: novoStatus, 
+                status: novoStatus, 
                 dataBatismo: document.getElementById('editDataBatismo').value.split('-').reverse().join('/'),
                 lider: document.getElementById('editLider').value, obs: document.getElementById('editObs').value
             };
@@ -896,6 +955,7 @@ async function dispararExclusaoOtimista() {
             try {
                 const res = await fetch(`${API_URL}?action=getBatismos`);
                 batismoCache = await res.json();
+                atualizarFiltrosDinamicos(batismoCache, 'fAnoBatismo', 'fMesBatismo');
                 filterBatismo();
             } catch (e) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-black italic uppercase animate-pulse">Falha ao conectar aos Batismos.</td></tr>'; }
         }
@@ -915,33 +975,60 @@ async function dispararExclusaoOtimista() {
                 
                 return checkAno && checkMes && checkPeriodo && checkBusca;
             });
+
+            currentPageBatismo = 1; // RESETA PARA PÁGINA 1 AO FILTRAR
             renderTableBatismo();
         }
-        function renderTableBatismo() {
-            const tbody = document.getElementById('table-batismo');
-            if(filteredBatismo.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
-                return;
-            }
-            tbody.innerHTML = filteredBatismo.map(item => {
-                const telLimpo = String(item.telefone || "").replace(/\D/g,'');
-                const msgWpp = `Olá *${item.nome_candidato.split(' ')[0]}*! 👋 Confirmamos seu *BATISMO*!🌊%0A🗓️ Data: *${item.data_batismo || 'A definir'}*%0A📍 Local: *${item.congregacao}*`;
+       function renderTableBatismo() {
+    const tbody = document.getElementById('table-batismo');
+    
+    // Paginação para a aba de Batismo
+    const start = (currentPageBatismo - 1) * itemsPerPageBatismo;
+    const end = start + itemsPerPageBatismo;
+    const paginated = filteredBatismo.slice(start, end);
+
+    if(paginated.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center font-bold text-slate-300 uppercase tracking-widest">Nenhum candidato encontrado</td></tr>';
+        document.getElementById('pageInfoBatismo').innerText = "Página 1 de 1";
+        return;
+    }
+
+    tbody.innerHTML = paginated.map(item => {
+        const telLimpo = String(item.telefone || "").replace(/\D/g,'');
+        const saudacao = `Olá *${item.nome_candidato.split(' ')[0]}*! Aqui é o(a) *${currentUser.nome.split(' ')[0]}* do DINC. Graça e Paz! 👋`;
+        
+        return `
+        <tr class="hover:bg-blue-50 transition border-b">
+            <td class="p-5">
+                <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro || '--/--/----'}</p>
+            </td>
+            <td class="p-5 font-bold text-slate-500 uppercase text-[10px]">${item.congregacao || '-'}</td>
+            <td class="p-5 font-bold text-slate-500 uppercase text-[10px] italic">${item.data_batismo || 'A DEFINIR'}</td>
+            <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status || 'Pendente'}</td>
+            <td class="p-5 text-right flex justify-end gap-2 no-print">
+                <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${encodeURIComponent(saudacao)}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                </a>
                 
-                return `
-                <tr class="hover:bg-blue-50 transition border-b">
-                    <td class="p-5">
-                        <p class="font-black text-slate-800 uppercase tracking-tighter leading-tight">${item.nome_candidato}</p>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase">Cadastro: ${item.data_cadastro}</p>
-                    </td>
-                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px]">${item.congregacao}</td>
-                    <td class="p-5 font-bold text-slate-500 uppercase text-[9px] italic">${item.data_batismo || '-'}</td>
-                    <td class="p-5 text-[9px] font-black text-blue-900 uppercase italic tracking-widest">${item.status}</td>
-                    <td class="p-5 text-right flex justify-end gap-2">
-                        <a href="https://api.whatsapp.com/send?phone=55${telLimpo}&text=${msgWpp}" target="_blank" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition shadow-sm"><i class="fa-brands fa-whatsapp text-lg"></i></a>
-                        <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow hover:scale-105 transition-all">GERIR</button>
-                    </td>
-                </tr>`;
-            }).join('');
+                <button onclick="confirmarExclusao('${item.nome_candidato}')" class="bg-red-100 text-red-600 p-2 rounded-lg hover:scale-110 transition active:scale-95">
+                    <i class="fa-solid fa-trash-can text-lg"></i>
+                </button>
+                
+                <button onclick="openEditBatismo('${item.nome_candidato}')" class="bg-blue-900 text-white px-4 py-2 rounded-xl text-[9px] font-black shadow transition-all active:scale-95">GERIR</button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    const totalPages = Math.ceil(filteredBatismo.length / itemsPerPageBatismo) || 1;
+    document.getElementById('pageInfoBatismo').innerText = `Página ${currentPageBatismo} de ${totalPages}`;
+}
+        
+        // Função para trocar de página
+        function changePageBatismo(dir) {
+            const max = Math.ceil(filteredBatismo.length / itemsPerPageBatismo);
+            currentPageBatismo = Math.min(Math.max(1, currentPageBatismo + dir), max);
+            renderTableBatismo();
         }
         
         function gerarRelatorioPDF() {
@@ -1030,6 +1117,8 @@ async function dispararExclusaoOtimista() {
             try {
                 const res = await fetch(`${API_URL}?action=getIntegracoes`);
                 integracaoCache = await res.json();
+                // CHAME AQUI PARA ATUALIZAR OS FILTROS SOZINHO
+        atualizarFiltrosDinamicos(integracaoCache, 'fAnoIntegracao', 'fMesIntegracao');
                 filterIntegracao();
             } catch (e) { 
                 tbody.innerHTML = '<tr><td colspan="4" class="p-10 text-center text-red-500 font-black italic uppercase">Erro ao carregar aba Integrações.</td></tr>'; 
@@ -1069,7 +1158,8 @@ async function dispararExclusaoOtimista() {
                     action: 'saveBaptism', 
                     nome: document.getElementById('nbNome').value, 
                     telefone: document.getElementById('nbTel').value, 
-                    loja: document.getElementById('nbLoja').value 
+                    loja: document.getElementById('nbLoja').value,
+                    periodo: document.getElementById('nbPeriodo').value
                 }), mode: 'no-cors' });
                 alert("Candidato Cadastrado!"); document.getElementById('modalNovoBatismo').style.display='none'; carregarBatismos();
             } catch(e) { alert("Erro."); }
@@ -1094,78 +1184,244 @@ async function dispararExclusaoOtimista() {
             if(!reg) return;
 
             document.getElementById('intModalNome').innerText = reg.nome;
+            document.getElementById('intEditNomeOriginal').value = reg.nome;
             document.getElementById('intEditNome').value = reg.nome;
             document.getElementById('intEditTel').value = reg.telefone;
+            document.getElementById('intEditEmail').value = reg['e-mail'] || reg.email || '';
+            document.getElementById('intEditEnd').value = reg.endereco || reg.endereço || '';
+            document.getElementById('intEditNasc').value = reg.nascimento || '';
             document.getElementById('intEditStatus').value = reg.status || "Pendente de Agendamento";
             
-            // Tenta formatar data para o input date (yyyy-mm-dd)
             if(reg.data_agendada && reg.data_agendada.includes('/')) {
                 const p = reg.data_agendada.split('/');
                 document.getElementById('intEditData').value = `${p[2]}-${p[1]}-${p[0]}`;
+            } else {
+                document.getElementById('intEditData').value = '';
             }
 
             document.getElementById('modalGerirIntegracao').style.display = 'flex';
         }
 
-        async function salvarMudancaIntegracao(e) {
+       async function salvarMudancaIntegracao(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSalvarInt');
-            const nome = document.getElementById('intEditNome').value;
+            const nomeOriginal = document.getElementById('intEditNomeOriginal').value;
+            const nomeNovo = document.getElementById('intEditNome').value;
             const tel = document.getElementById('intEditTel').value.replace(/\D/g,'');
             const status = document.getElementById('intEditStatus').value;
-            const dataRaw = document.getElementById('intEditData').value;
-            const dataFormatada = dataRaw.split('-').reverse().join('/');
-
+            const dataFormatada = document.getElementById('intEditData').value.split('-').reverse().join('/');
+            
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> SALVANDO...';
 
             const payload = {
                 action: 'updateIntegracao',
-                nome: nome,
+                nomeOriginal: nomeOriginal,
+                nome: nomeNovo,
+                telefone: document.getElementById('intEditTel').value,
+                email: document.getElementById('intEditEmail').value,
+                endereco: document.getElementById('intEditEnd').value,
+                nascimento: document.getElementById('intEditNasc').value,
                 status: status,
                 dataAgendada: dataFormatada
             };
 
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                
-                showFeedback("Integração Atualizada!");
+                showFeedback("Ficha Sincronizada!");
                 document.getElementById('modalGerirIntegracao').style.display = 'none';
                 
-                // DISPARO AUTOMÁTICO DO WHATSAPP
-                const msg = `Olá *${nome.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar*, na *Igreja ADSA Matriz*. Sua presença é muito importante!`;
-                window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+                if(status === "Agendado") {
+                    const nomeOperador = currentUser ? currentUser.nome.split(' ')[0] : "Secretaria";
+                    const msg = `Olá *${nomeNovo.split(' ')[0]}*! 👋 Sua integração será dia *${dataFormatada}* às *16h30*, no *5º andar* da nossa Matriz. Sua presença é muito importante!`;
+                    window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
+                }
                 
                 carregarIntegracoes(true);
             } catch(e) {
                 showFeedback("Erro ao salvar.", "error");
             } finally {
-                btn.innerHTML = 'Confirmar e Abrir WhatsApp';
+                btn.innerHTML = 'Salvar Alterações e Notificar';
             }
         }
-        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO
+        // FUNÇÃO PARA GERAR PDF DA INTEGRAÇÃO COM TOTAL
         function gerarPDFIntegracao() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            const doc = new jsPDF('l', 'mm', 'a4'); 
+            
             doc.setFontSize(14);
             doc.text("DINC - RELATÓRIO DE INTEGRAÇÃO (5º ANDAR)", 15, 15);
             
-            // Mapeia os dados filtrados da aba integração
+            // NOVA LINHA: Adiciona o TOTAL no PDF
+            doc.setFontSize(10);
+            doc.text(`Total Filtrado: ${filteredIntegracao.length} candidato(s)`, 15, 22);
+            
             const data = filteredIntegracao.map(i => [
                 i.nome, 
                 i.telefone, 
-                i.status || 'Pendente', 
-                i.data_agendada || '-',
-                i.lider || '-'
+                i['e-mail'] || i.email || '-', 
+                i.endereco || i.endereço || '-'
             ]);
 
             doc.autoTable({ 
-                head: [['NOME', 'TELEFONE', 'STATUS', 'DATA AGENDADA', 'LÍDER']], 
+                head: [['NOME', 'TELEFONE', 'E-MAIL', 'ENDEREÇO']], 
                 body: data, 
-                startY: 25, 
+                startY: 28, // Baixei um pouco a tabela para caber o texto
                 theme: 'grid',
-                headStyles: { fillColor: [13, 45, 90] }
+                headStyles: { fillColor: [13, 45, 90] },
+                columnStyles: {
+                    0: { cellWidth: 50 }, 
+                    1: { cellWidth: 35 }, 
+                    2: { cellWidth: 55 }, 
+                    3: { cellWidth: 'auto' } 
+                }
             });
-            doc.save("Relatorio_Integracao_5Andar.pdf");
+            
+            doc.save("Relatorio_Integracao_Completo.pdf");
+        }
+        
+      function confirmarExclusao(nome) {
+    const modalConfirm = document.createElement('div');
+    modalConfirm.id = 'modalConfirmExclusao';
+    modalConfirm.className = 'modal-analise flex items-center justify-center'; // Reutilizando classe CSS do projeto
+    modalConfirm.innerHTML = `
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative border-t-4 border-red-500 text-center">
+            <h3 class="font-black text-red-600 uppercase italic mb-4">CONFIRMAR EXCLUSÃO</h3>
+            <p class="text-xs text-gray-600 mb-6 uppercase font-bold">Deseja remover permanentemente o candidato?<br><span class="font-black text-slate-800 text-sm">${nome.toUpperCase()}</span></p>
+            <div class="flex gap-2">
+                <button type="button" onclick="document.getElementById('modalConfirmExclusao').remove()" class="w-1/2 bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition uppercase text-[10px]">CANCELAR</button>
+                <button type="button" onclick="executarExclusaoCandidato('${nome}')" class="w-1/2 bg-red-600 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-red-700 transition uppercase text-[10px] tracking-widest font-black italic">SIM, EXCLUIR</button>
+            </div>
+        </div>
+    `;
+    modalConfirm.style.display = 'flex';
+    document.body.appendChild(modalConfirm);
+}
+
+async function executarExclusaoCandidato(nome) {
+    const modal = document.getElementById('modalConfirmExclusao');
+    const btnExcluir = modal.querySelector('button[onclick*="executarExclusaoCandidato"]');
+    btnExcluir.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    btnExcluir.disabled = true;
+
+    // PADRÃO OURO: Optimistic UI - Remove do cache local imediatamente
+    const index = dbCache.findIndex(i => i.nome === nome);
+    if(index !== -1) {
+        dbCache.splice(index, 1);
+        filterTable(); // Atualiza a tabela instantaneamente
+    }
+
+    const payload = { 
+        action: 'deleteBaptism', 
+        nome: nome 
+    };
+
+    try {
+        await fetch(API_URL, { 
+            method: 'POST', 
+            body: JSON.stringify(payload), 
+            mode: 'no-cors' 
+        });
+        
+        showFeedback("Candidato removido com sucesso!");
+        modal.remove(); // Fecha o modal de confirmação
+    } catch(e) { 
+        showFeedback("Erro ao conectar com o servidor.", "error"); 
+        // Em caso de erro, recarrega a tabela para restaurar o dado se necessário
+        carregarBatismos(true); 
+    }
+}
+
+        function atualizarFiltrosDinamicos(dados, idAno, idMes) {
+    const selectAno = document.getElementById(idAno);
+    const selectMes = document.getElementById(idMes);
+    if (!selectAno || !selectMes) return;
+
+    const anos = new Set();
+    const meses = new Set();
+
+    dados.forEach(item => {
+        // Tenta pegar a data de cadastro ou data comum
+        const dataStr = item.data_cadastro || item.data;
+        if (dataStr && dataStr.includes('/')) {
+            const partes = dataStr.split('/');
+            if (partes.length === 3) {
+                anos.add(partes[2].trim());
+                meses.add(partes[1].trim());
+            }
+        }
+    });
+
+    // Monta Anos (Ordenado do mais novo para o mais antigo)
+    const anosOrdenados = Array.from(anos).sort((a, b) => b - a);
+    selectAno.innerHTML = anosOrdenados.map(ano => `<option value="${ano}">${ano}</option>`).join('');
+
+    // Monta Meses
+    const nomesMeses = {
+        "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr", "05": "Mai", "06": "Jun",
+        "07": "Jul", "08": "Ago", "09": "Set", "10": "Out", "11": "Nov", "12": "Dez"
+    };
+    
+    let htmlMes = '<option value="">Todos Meses</option>';
+    const mesesOrdenados = Array.from(meses).sort();
+    mesesOrdenados.forEach(m => {
+        htmlMes += `<option value="/${m}/">${nomesMeses[m] || m}</option>`;
+    });
+    selectMes.innerHTML = htmlMes;
+}
+
+function imprimirFichaIndividual() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const nome = document.getElementById('intEditNome').value;
+            const tel = document.getElementById('intEditTel').value;
+            const email = document.getElementById('intEditEmail').value;
+            const end = document.getElementById('intEditEnd').value;
+            const nasc = document.getElementById('intEditNasc').value;
+            const status = document.getElementById('intEditStatus').value;
+            const agendado = document.getElementById('intEditData').value.split('-').reverse().join('/');
+
+            // Cabeçalho com Logos
+            doc.setFillColor(13, 45, 90);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            doc.setFontSize(22);
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("FICHA DE INTEGRAÇÃO", 105, 25, { align: "center" });
+
+            // Conteúdo Estilizado (Inspirado no anexo)
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString()}`, 15, 50);
+
+            const rows = [
+                ["NOME COMPLETO:", nome.toUpperCase()],
+                ["DATA NASCIMENTO:", nasc],
+                ["WHATSAPP:", tel],
+                ["ENDEREÇO:", end.toUpperCase()],
+                ["E-MAIL:", email.toLowerCase()],
+                ["STATUS ATUAL:", status.toUpperCase()],
+                ["DATA AGENDADA:", agendado || "NÃO AGENDADO"]
+            ];
+
+            doc.autoTable({
+                startY: 60,
+                body: rows,
+                theme: 'plain',
+                styles: { fontSize: 12, cellPadding: 6 },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 50, textColor: [100, 100, 100] },
+                    1: { cellWidth: 'auto' }
+                }
+            });
+
+            // Rodapé
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text("ADSA BRASIL - Departamento de Integração e Novos Convertidos (DINC)", 105, 280, { align: "center" });
+
+            doc.save(`Ficha_${nome.replace(/\s+/g, '_')}.pdf`);
         }
     </script>
 </body>
