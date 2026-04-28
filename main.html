@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DINC - Sistema de Integração ADSA Brasil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #081a33; color: white; overflow-x: hidden; }
+        
+        /* Video Background */
+        #video-bg {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+            opacity: 0.4;
+        }
+
+        .overlay-gradient {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(8,26,51,0.7) 0%, rgba(8,26,51,0.95) 100%);
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-10px);
+            border-color: #f47b20;
+        }
+
+        .btn-orange {
+            background: linear-gradient(90deg, #f47b20, #fdb913);
+            box-shadow: 0 10px 20px rgba(244, 123, 32, 0.3);
+        }
+
+        .sound-control {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .float-animation { animation: float 6s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <video autoplay muted loop playsinline id="video-bg">
+        <source src="administrator/média/VID-20260129-WA0033.mp4" type="video/mp4">
+    </video>
+    <div class="overlay-gradient"></div>
+
+    <button onclick="toggleMute()" class="sound-control bg-white/10 hover:bg-white/20 p-4 rounded-full backdrop-blur-md transition-all border border-white/20">
+        <i id="mute-icon" class="fa-solid fa-volume-xmark text-xl"></i>
+    </button>
+
+    <div class="container mx-auto px-6 py-12 flex flex-col items-center justify-center min-h-screen relative z-10">
+        
+        <div class="text-center mb-16 float-animation">
+            <div class="flex justify-center gap-6 mb-8">
+                <img src="administrator/média/ADSA.png" alt="ADSA Logo" class="h-24 md:h-32 object-contain brightness-0 invert">
+                <div class="h-20 w-[2px] bg-gradient-to-b from-orange-500 to-transparent"></div>
+                <img src="administrator/média/DINC.png" alt="DINC Logo" class="h-24 md:h-32 object-contain brightness-0 invert">
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">
+                DINC <span class="text-orange-500">PILOTO</span>
+            </h1>
+            <p class="text-blue-200 text-sm md:text-lg font-bold uppercase tracking-[0.4em] italic">
+                Departamento de Integração de Novos Convertidos
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+            
+            <a href="index.html" class="glass-card p-10 rounded-[2.5rem] text-center group">
+                <div class="w-20 h-20 bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-heart-circle-plus text-4xl text-orange-500"></i>
+                </div>
+                <h3 class="text-xl font-black uppercase mb-3">Receber Nova Alma</h3>
+                <p class="text-gray-400 text-sm mb-6 font-medium">Cadastro rápido de novos decididos durante o culto.</p>
+                <div class="inline-block py-3 px-8 rounded-full border border-orange-500/50 text-orange-500 font-bold uppercase text-xs tracking-widest group-hover:bg-orange-500 group-hover:text-white transition-all">
+                    Acessar Formulário
+                </div>
+            </a>
+
+            <a href="integracao.html" class="glass-card p-10 rounded-[2.5rem] text-center group">
+                <div class="w-20 h-20 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-address-card text-4xl text-blue-400"></i>
+                </div>
+                <h3 class="text-xl font-black uppercase mb-3">Ficha de Integração</h3>
+                <p class="text-gray-400 text-sm mb-6 font-medium">Landing Page para o convertido preencher dados detalhados.</p>
+                <div class="inline-block py-3 px-8 rounded-full border border-blue-400/50 text-blue-400 font-bold uppercase text-xs tracking-widest group-hover:bg-blue-400 group-hover:text-white transition-all">
+                    Ver Página
+                </div>
+            </a>
+
+            <a href="administrator/index.html" class="glass-card p-10 rounded-[2.5rem] text-center group border-2 border-white/5">
+                <div class="w-20 h-20 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-user-shield text-4xl text-emerald-400"></i>
+                </div>
+                <h3 class="text-xl font-black uppercase mb-3">Gestão Master</h3>
+                <p class="text-gray-400 text-sm mb-6 font-medium">Painel administrativo para controle e relatórios da secretaria.</p>
+                <div class="inline-block py-3 px-8 rounded-full btn-orange text-white font-black uppercase text-xs tracking-widest transition-all">
+                    Painel Restrito
+                </div>
+            </a>
+
+        </div>
+
+        <div class="mt-20 text-center">
+            <p class="text-blue-300/40 text-[10px] font-black uppercase tracking-[0.5em]">
+                ADSA Brasil - Matriz &copy; 2026 - Gestão de Almas
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video-bg');
+        const muteIcon = document.getElementById('mute-icon');
+
+        function toggleMute() {
+            if (video.muted) {
+                video.muted = false;
+                muteIcon.classList.remove('fa-volume-xmark');
+                muteIcon.classList.add('fa-volume-high');
+                video.play();
+            } else {
+                video.muted = true;
+                muteIcon.classList.remove('fa-volume-high');
+                muteIcon.classList.add('fa-volume-xmark');
+            }
+        }
+
+        // Auto play fix for some browsers
+        window.addEventListener('load', () => {
+            video.play().catch(error => {
+                console.log("Autoplay bloqueado pelo navegador");
+            });
+        });
+    </script>
+</body>
+</html>
