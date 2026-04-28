@@ -1166,18 +1166,37 @@ async function dispararExclusaoOtimista() {
             finally { btn.innerHTML = 'CADASTRAR CANDIDATO'; btn.disabled = false; }
         }
 
-        function gerarPDFBatismo() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(14); doc.text("DINC - RELATÓRIO DE BATISMO", 15, 15);
-            doc.autoTable({ 
-                head: [["NOME", "TELEFONE", "DATA BATISMO", "STATUS"]], 
-                body: filteredBatismo.map(i => [i.nome_candidato, i.telefone, i.data_batismo || '-', i.status]), 
-                startY: 25, 
-                theme: 'grid' 
-            });
-            doc.save(`Batismo_Relatorio.pdf`);
-        }
+       function gerarPDFBatismo() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('l', 'mm', 'a4'); // Alterado para 'l' (landscape/horizontal) para caber a nova coluna
+    
+    doc.setFontSize(14); 
+    doc.text("DINC - RELATÓRIO DE BATISMO", 15, 15);
+    
+    // Adicionado TOTAL no topo do PDF
+    doc.setFontSize(10);
+    doc.text(`Total de Candidatos: ${filteredBatismo.length}`, 15, 22);
+
+    doc.autoTable({ 
+        // Adicionado 'PERÍODO' ao cabeçalho
+        head: [["NOME", "TELEFONE", "PERÍODO", "DATA BATISMO", "CONGREGAÇÃO", "STATUS"]], 
+        // Mapeando a chave 'periodo' que vem do cache da aba Batismos
+        body: filteredBatismo.map(i => [
+            i.nome_candidato, 
+            i.telefone, 
+            i.periodo || '-', 
+            i.data_batismo || 'A DEFINIR', 
+            i.congregacao || '-',
+            i.status || 'Pendente'
+        ]), 
+        startY: 28, 
+        theme: 'grid',
+        headStyles: { fillColor: [13, 45, 90] }, // Azul DINC
+        styles: { fontSize: 9 }
+    });
+    
+    doc.save(`Batismo_Relatorio_${new Date().toLocaleDateString()}.pdf`);
+}
         
         function openModalIntegracao(nome) {
             const reg = integracaoCache.find(i => i.nome === nome);
