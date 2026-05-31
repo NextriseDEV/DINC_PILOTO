@@ -182,33 +182,38 @@
                 </div>
             </div>
         </div> <div id="view-integracao" class="hidden">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
-                    <span id="totalIntegracao" class="bg-[#f47b20] text-white font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-sm">Total: 0</span>
+            <!-- CABEÇALHO RESPONSIVO -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-200 pb-4">
+                <div class="flex flex-wrap items-center gap-3 w-full justify-between md:justify-start">
+                    <h2 class="text-xl md:text-2xl font-black text-blue-900 uppercase italic tracking-tighter">Gestão de Integrações</h2>
+                    <!-- O span "total" não será cortado no mobile graças ao flex-wrap -->
+                    <span id="totalIntegracao" class="bg-[#f47b20] text-white font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-widest shadow-sm shrink-0">Total: 0</span>
                 </div>
-                <button onclick="gerarPDFIntegracao()" class="bg-red-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all"><i class="fa-solid fa-file-pdf mr-2"></i> Relatório PDF</button>
+                <button onclick="gerarPDFIntegracao()" class="w-full md:w-auto bg-red-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase shadow-md hover:bg-red-700 transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-file-pdf"></i> Relatório PDF</button>
             </div>
 
-            <div class="bg-white p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center border border-slate-100 no-print">
-                <input type="text" id="searchIntegracao" placeholder="Busca inteligente na integração..." class="w-full flex-1 p-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900" onkeyup="filterIntegracao()">
-                <button onclick="carregarIntegracoes(true)" class="bg-blue-900 text-white p-2 rounded-xl px-4 text-xs font-bold w-auto hover:bg-blue-700"><i class="fa-solid fa-sync"></i></button>
+            <div class="bg-white p-4 md:p-5 rounded-3xl shadow-sm mb-6 flex flex-col md:flex-row gap-3 items-center border border-slate-100 no-print w-full">
+                <div class="relative w-full flex-1">
+                    <input type="text" id="searchIntegracao" placeholder="Busca inteligente na integração..." class="w-full p-3 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-900 font-medium pl-10" onkeyup="filterIntegracao()">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400 text-sm"></i>
+                </div>
+                <button onclick="carregarIntegracoes(true)" class="bg-blue-900 text-white p-3 rounded-xl text-xs font-bold w-full md:w-12 flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm"><i class="fa-solid fa-sync"></i></button>
             </div>
             
-<div class="flex flex-col md:flex-row justify-end items-center mb-4 gap-2 no-print">
-                <div class="flex gap-2">
-                    <select id="fStatusIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase">
-                        <option value="">Todos os Status</option>
+            <!-- FILTROS COM RESPONSIVIDADE FORÇADA -->
+            <div class="flex justify-end items-center mb-4 w-full no-print">
+                <div class="grid grid-cols-2 md:flex md:flex-wrap gap-2 w-full md:justify-end">
+                    <select id="fStatusIntegracao" onchange="filterIntegracao()" class="p-2.5 border rounded-xl text-[10px] font-black bg-white uppercase shadow-sm outline-none focus:border-blue-900 text-slate-700">
+                        <option value="">Status (Todos)</option>
                         <option value="Pendente de Agendamento">Pendente</option>
                         <option value="Agendado">Agendado</option>
                         <option value="Concluido">Concluído</option>
                     </select>
-                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white"></select>
-                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"></select>
-                    <select id="fPeriodoIntegracao" onchange="filterIntegracao()" class="p-2 border rounded-xl text-[10px] font-black bg-white uppercase"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
+                    <select id="fAnoIntegracao" onchange="filterIntegracao()" class="p-2.5 border rounded-xl text-[10px] font-black bg-white shadow-sm outline-none focus:border-blue-900 text-slate-700"></select>
+                    <select id="fMesIntegracao" onchange="filterIntegracao()" class="p-2.5 border rounded-xl text-[10px] font-black bg-white uppercase shadow-sm outline-none focus:border-blue-900 text-slate-700"></select>
+                    <select id="fPeriodoIntegracao" onchange="filterIntegracao()" class="p-2.5 border rounded-xl text-[10px] font-black bg-white uppercase shadow-sm outline-none focus:border-blue-900 text-slate-700"><option value="">Períodos</option><option value="MANHÃ">Manhã</option><option value="NOITE">Noite</option></select>
                 </div>
             </div>
-
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left min-w-[700px]">
