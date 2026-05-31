@@ -11,30 +11,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s; z-index: 50; }
-        .sidebar.active { transform: translateX(0); }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; -webkit-font-smoothing: antialiased; }
+        .sidebar { width: 250px; background: #0d2d5a; min-height: 100vh; color: white; position: fixed; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; }
+        .sidebar.active { transform: translateX(0) !important; }
         .nav-item { padding: 1rem 1.5rem; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
         .nav-item:hover { background: #1e40af; }
         .nav-item.active { background: #1e40af; border-left-color: #f47b20; font-weight: bold; }
-        .content { margin-left: 250px; padding: 2rem; transition: margin-left 0.3s; }
+        .content { margin-left: 250px; padding: 2rem; transition: margin-left 0.3s ease; }
+        
+        /* Otimização de Performance de Rolagem no Mobile */
+        .no-print { content-visibility: auto; }
+        .custom-scroll { -webkit-overflow-scrolling: touch; }
         
         .card-crescimento { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #f47b20; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
         
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-250px); }
-            .content { margin-left: 0; padding: 1rem; }
+            .content { margin-left: 0 !important; padding: 1rem; pt-20; }
             .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
-            .hidden { display: none; }
             #mobile-header { display: flex !important; }
         }
-        /* Referência: Estilos de Status e Feedback */
-        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        #mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 64px; background: #0d2d5a; color: white; z-index: 45; align-items: center; justify-content: space-between; padding-inline: 1rem; }
-        /* Modal de Feedback Padrão Ouro - NOVO */
-        .feedback-toast { position: fixed; bottom: 20px; right: 20px; padding: 1rem 2rem; border-radius: 1rem; color: white; font-weight: bold; z-index: 200; transform: translateY(100px); transition: 0.3s; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        
+        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+        .modal-analise { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); p: 1rem; }
+        #mobile-header { display: none; position: fixed; top: 0; left: 0; right: 0; height: 64px; background: #0d2d5a; color: white; z-index: 45; align-items: center; justify-content: space-between; padding-inline: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        .feedback-toast { position: fixed; bottom: 20px; right: 20px; left: 20px; md:left: auto; padding: 1rem 2rem; border-radius: 1rem; color: white; font-weight: bold; z-index: 200; transform: translateY(100px); transition: 0.3s; box-shadow: 0 10px 15px rgba(0,0,0,0.2); text-center: md:text-left; }
         .feedback-toast.show { transform: translateY(0); }
         .bg-success { background: #10b981; }
         .bg-error { background: #ef4444; }
